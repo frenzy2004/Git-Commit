@@ -475,3 +475,71 @@
   async function sendAudio() {
     if (!state.audioBlob) return;
     const form = new FormData();
+    const previousLabel = dom.audioLabel.textContent;
+    form.append("file", state.audioBlob, state.audioName);
+    showLoading();
+    dom.sendAudio.disabled = true;
+    dom.audioLabel.textContent = "Processing audio…";
+    try {
+      showAnswer(await requestJson("/lecture", { method: "POST", body: form }));
+    } catch (error) {
+      showProblem(`Error: ${error.message}`);
+    } finally {
+      dom.audioLabel.textContent = previousLabel;
+      dom.sendAudio.disabled = false;
+    }
+  }
+
+  dom.copyButton.addEventListener("click", async () => {
+    const sentenceText = Array.from(dom.sentences.querySelectorAll("p")).map(item => item.textContent.trim());
+    const text = sentenceText.length ? sentenceText.join(" ") : dom.summary.textContent;
+    if (!text) return;
+    try {
+      await navigator.clipboard.writeText(text);
+      dom.copyButton.classList.add("copied");
+      dom.copyButton.querySelector("span").textContent = "Copied";
+      setTimeout(() => {
+        dom.copyButton.classList.remove("copied");
+        dom.copyButton.querySelector("span").textContent = "Copy";
+      }, 1500);
+    } catch {}
+  });
+
+  root.addEventListener("click", event => {
+    const mode = event.target.closest("[data-mode]");
+    const jump = event.target.closest("[data-jump]");
+    if (mode) setMode(mode.dataset.mode);
+    if (jump) setMode(jump.dataset.jump);
+  });
+
+  root.querySelector("[data-start-camera]").addEventListener("click", beginCamera);
+  dom.capture.addEventListener("click", captureImage);
+  dom.clearImage.addEventListener("click", resetImage);
+  dom.sendImage.addEventListener("click", sendImage);
+  dom.imageFile.addEventListener("change", () => {
+    const file = dom.imageFile.files[0];
+    if (!file) return;
+    hideOutput();
+    stopCamera();
+    acceptImage(file);
+  });
+
+  dom.record.addEventListener("click", startRecording);
+  dom.stop.addEventListener("click", stopRecording);
+  dom.clearAudio.addEventListener("click", resetAudio);
+  dom.sendAudio.addEventListener("click", sendAudio);
+  dom.audioFile.addEventListener("change", () => {
+    const file = dom.audioFile.files[0];
+    if (!file) return;
+    hideOutput();
+    if (state.recorder?.state === "recording") state.recorder.stop();
+    loadAudio(file, file.name);
+  });
+
+  window.addEventListener("beforeunload", () => {
+    stopCamera();
+    revokeImageUrl();
+  });
+
+  refreshHealth();
+})();
