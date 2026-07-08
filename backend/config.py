@@ -45,6 +45,7 @@ class Settings:
     vision_model: str
     summary_model: str
     transcribe_model: str
+    realtime_model: str
     cors_origins: tuple[str, ...]
     max_image_bytes: int
     max_audio_bytes: int
@@ -70,6 +71,7 @@ def get_settings() -> Settings:
         vision_model=os.getenv("OPENAI_VISION_MODEL", default_model),
         summary_model=os.getenv("OPENAI_SUMMARY_MODEL", default_model),
         transcribe_model=os.getenv("OPENAI_TRANSCRIBE_MODEL", "gpt-4o-transcribe"),
+        realtime_model=os.getenv("OPENAI_REALTIME_MODEL", "gpt-realtime-2"),
         cors_origins=parse_csv(os.getenv("CORS_ORIGINS"), ("*",)),
         max_image_bytes=parse_int(os.getenv("MAX_IMAGE_BYTES"), 10 * 1024 * 1024),
         max_audio_bytes=parse_int(os.getenv("MAX_AUDIO_BYTES"), 50 * 1024 * 1024),

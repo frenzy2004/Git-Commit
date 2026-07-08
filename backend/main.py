@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi import FastAPI, File, HTTPException, Request, Response, UploadFile
 from fastapi.concurrency import run_in_threadpool
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -10,6 +10,7 @@ from .audio import warm_audio_model
 from .braille import louis
 from .config import Settings, get_settings
 from .pipeline import process_audio_bytes, process_image_bytes
+from .realtime import create_realtime_call, realtime_available
 from .serial_out import serial_available
 from .summarizer import summary_available
 from .uploads import read_upload_limited, validate_audio_upload, validate_image_upload
@@ -29,6 +30,7 @@ def health_payload(settings: Settings, audio_ready: bool) -> dict:
             "vision": vision_available(settings),
             "lecture_summary": summary_available(settings),
             "transcription": settings.mock_transcribe or audio_ready,
+            "realtime": realtime_available(settings),
             "braille": louis is not None,
             "serial": serial_available(),
             "device_preview": True,
@@ -84,6 +86,19 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             raise HTTPException(422, str(exc)) from exc
         except Exception as exc:
             raise HTTPException(503, f"Lecture pipeline unavailable: {exc}") from exc
+
+    @app.post("/realtime/session")
+    async def create_realtime_session(request: Request):
+        offer_sdp = (await request.body()).decode("utf-8", errors="ignore").strip()
+        if not offer_sdp:
+            raise HTTPException(400, "Missing SDP offer")
+
+        try:
+            answer_sdp = await run_in_threadpool(create_realtime_call, offer_sdp, settings)
+        except Exception as exc:
+            raise HTTPException(503, f"Realtime session unavailable: {exc}") from exc
+
+        return Response(content=answer_sdp, media_type="application/sdp")
 
     return app
 

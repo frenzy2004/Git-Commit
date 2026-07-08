@@ -21,6 +21,7 @@
     imageBlob: null,
     imageSource: null,
     recorder: null,
+    realtime: null,
     audioBlob: null,
     audioName: "recording.webm",
     audioParts: [],
@@ -288,6 +289,10 @@
     return state.apiHealth !== null;
   }
 
+  function hasRealtimeService() {
+    return Boolean(state.apiHealth?.services?.realtime && window.RTCPeerConnection);
+  }
+
   function showLoading() {
     dom.loading.classList.remove("hidden");
     dom.result.classList.add("hidden");
@@ -464,6 +469,7 @@
     if (state.recorder?.state === "recording") {
       try { state.recorder.stop(); } catch {}
     }
+    cleanupRealtimeSession();
     state.recorder = null;
     state.audioParts = [];
     state.audioBlob = null;
@@ -478,6 +484,17 @@
     hideOutput();
   }
 
+  function cleanupRealtimeSession() {
+    const session = state.realtime;
+    if (!session) return;
+    session.stream?.getTracks().forEach(track => track.stop());
+    if (session.peer?.connectionState !== "closed") {
+      try { session.peer.close(); } catch {}
+    }
+    session.audio?.remove();
+    state.realtime = null;
+  }
+
   function loadAudio(blob, name) {
     state.audioBlob = blob;
     state.audioName = name;
@@ -488,10 +505,37 @@
     dom.sendAudio.disabled = false;
   }
 
+  function audioSetupMessage(error) {
+    const message = error?.message || "";
+    if (/permission|denied|notallowed/i.test(message) || error?.name === "NotAllowedError") {
+      return "Microphone permission was blocked. Use Upload for an audio file.";
+    }
+    if (/could not start audio source|notreadable|trackstart/i.test(message) || error?.name === "NotReadableError") {
+      return "Microphone is unavailable. Use Upload for an audio file.";
+    }
+    return `Audio setup failed: ${message || "Could not start audio."}`;
+  }
+
   async function startRecording() {
+    hideOutput();
+    if (hasRealtimeService()) {
+      try {
+        await startRealtimeAudio();
+        return;
+      } catch (error) {
+        cleanupRealtimeSession();
+        if (error?.source === "microphone") {
+          showProblem(audioSetupMessage(error));
+          return;
+        }
+      }
+    }
+    await startLocalRecording();
+  }
+
+  async function startLocalRecording() {
     try {
       if (!window.MediaRecorder) throw new Error("This browser does not support in-browser audio recording.");
-      hideOutput();
       state.audioBlob = null;
       state.audioParts = [];
       dom.audioFile.value = "";
@@ -517,11 +561,160 @@
       dom.clearAudio.disabled = false;
       dom.sendAudio.disabled = true;
     } catch (error) {
-      showProblem(`Audio setup failed: ${error.message}`);
+      showProblem(audioSetupMessage(error));
     }
   }
 
+  async function startRealtimeAudio() {
+    if (!navigator.mediaDevices?.getUserMedia) {
+      const error = new Error("This browser does not support microphone capture.");
+      error.source = "microphone";
+      throw error;
+    }
+
+    let stream;
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+        },
+      });
+    } catch (error) {
+      error.source = "microphone";
+      throw error;
+    }
+
+    const peer = new RTCPeerConnection();
+    const channel = peer.createDataChannel("oai-events");
+    const audio = document.createElement("audio");
+    audio.autoplay = true;
+    audio.hidden = true;
+    root.appendChild(audio);
+
+    stream.getTracks().forEach(track => peer.addTrack(track, stream));
+    peer.ontrack = event => {
+      audio.srcObject = event.streams[0];
+    };
+
+    state.realtime = {
+      peer,
+      channel,
+      stream,
+      audio,
+      text: "",
+    };
+
+    channel.addEventListener("message", handleRealtimeEvent);
+    channel.addEventListener("open", () => {
+      dom.audioLabel.textContent = "Realtime listening...";
+    });
+
+    const offer = await peer.createOffer();
+    await peer.setLocalDescription(offer);
+    const response = await fetch(`${apiBase}/realtime/session`, {
+      method: "POST",
+      body: offer.sdp,
+      headers: { "Content-Type": "application/sdp" },
+    });
+    if (!response.ok) {
+      const detail = await response.text();
+      throw new Error(detail || response.statusText);
+    }
+
+    await peer.setRemoteDescription({
+      type: "answer",
+      sdp: await response.text(),
+    });
+
+    state.audioBlob = null;
+    state.audioParts = [];
+    dom.audioFile.value = "";
+    dom.wave.classList.remove("ready");
+    dom.wave.classList.add("active");
+    dom.audioLabel.textContent = "Realtime listening...";
+    dom.record.disabled = true;
+    dom.stop.disabled = false;
+    dom.clearAudio.disabled = false;
+    dom.sendAudio.disabled = true;
+  }
+
+  function handleRealtimeEvent(event) {
+    const session = state.realtime;
+    if (!session) return;
+
+    let serverEvent;
+    try {
+      serverEvent = JSON.parse(event.data);
+    } catch {
+      return;
+    }
+
+    if (serverEvent.type === "response.output_text.delta") {
+      session.text += serverEvent.delta || "";
+      return;
+    }
+    if (serverEvent.type === "response.output_text.done" && serverEvent.text) {
+      session.text = serverEvent.text;
+      return;
+    }
+    if (serverEvent.type === "response.done") {
+      const text = extractRealtimeText(serverEvent.response) || session.text.trim();
+      cleanupRealtimeSession();
+      dom.wave.classList.remove("active");
+      dom.wave.classList.add("ready");
+      dom.audioLabel.textContent = "Realtime summary ready";
+      dom.record.disabled = false;
+      dom.stop.disabled = true;
+      dom.clearAudio.disabled = false;
+      if (text) showAnswer(preparedAudioResult(text));
+      return;
+    }
+    if (serverEvent.type === "error") {
+      cleanupRealtimeSession();
+      dom.wave.classList.remove("active");
+      dom.record.disabled = false;
+      dom.stop.disabled = true;
+      showProblem("Realtime audio could not finish. Upload an audio file instead.");
+    }
+  }
+
+  function extractRealtimeText(value) {
+    if (!value) return "";
+    if (typeof value === "string") return value.trim();
+    if (Array.isArray(value)) return value.map(extractRealtimeText).filter(Boolean).join(" ").trim();
+    if (typeof value !== "object") return "";
+
+    if (typeof value.text === "string") return value.text.trim();
+    if (typeof value.transcript === "string") return value.transcript.trim();
+    return extractRealtimeText(value.output || value.content || value.item || value.response);
+  }
+
   function stopRecording() {
+    if (state.realtime) {
+      dom.audioLabel.textContent = "Preparing realtime summary...";
+      dom.wave.classList.remove("active");
+      showLoading();
+      if (state.realtime.channel.readyState === "open") {
+        state.realtime.channel.send(JSON.stringify({
+          type: "response.create",
+          response: {
+            output_modalities: ["text"],
+            instructions: "Return the single essential idea from the speech as a braille-ready sentence.",
+          },
+        }));
+      } else {
+        cleanupRealtimeSession();
+        dom.record.disabled = false;
+        dom.stop.disabled = true;
+        showProblem("Realtime audio could not start. Upload an audio file instead.");
+        return;
+      }
+      state.realtime.stream?.getTracks().forEach(track => track.stop());
+      dom.stop.disabled = true;
+      return;
+    }
     if (state.recorder?.state === "recording") state.recorder.stop();
     dom.stop.disabled = true;
   }
@@ -547,8 +740,7 @@
     }
   }
 
-  function preparedAudioResult() {
-    const text = "This recording has one main point for the lesson.";
+  function preparedAudioResult(text = "This recording has one main point.") {
     return {
       mode: "lecture",
       simple_text: text,

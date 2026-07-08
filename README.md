@@ -58,6 +58,7 @@ backend/
     GET  /health
     POST /image
     POST /lecture
+    POST /realtime/session
   uploads.py
     MIME validation + bounded reads
   pipeline.py
@@ -68,6 +69,8 @@ model adapters/
     image bytes -> OpenAI Responses API -> one tactile-ready note
   audio.py
     audio bytes -> OpenAI transcription -> transcript
+  realtime.py
+    browser SDP offer -> OpenAI Realtime session -> SDP answer
   summarizer.py
     transcript -> OpenAI Responses API -> key point
 
@@ -111,13 +114,15 @@ Fingertips is intentionally split into small runtime boundaries so each layer ca
 
 - `vision.py` sends image data as a base64 data URL through the OpenAI Responses API.
 - `audio.py` sends uploaded audio bytes to the OpenAI audio transcription endpoint.
+- `realtime.py` brokers browser WebRTC sessions to OpenAI Realtime without exposing the server API key to frontend code.
 - `summarizer.py` sends transcripts through the OpenAI Responses API with a tactile-reading prompt.
 - Model IDs are environment-driven:
   - `OPENAI_MODEL`
   - `OPENAI_VISION_MODEL`
   - `OPENAI_SUMMARY_MODEL`
   - `OPENAI_TRANSCRIBE_MODEL`
-- Current defaults use `gpt-5.5` for image and summary reasoning, and `gpt-4o-transcribe` for speech-to-text.
+  - `OPENAI_REALTIME_MODEL`
+- Current defaults use `gpt-5.5` for image and summary reasoning, `gpt-4o-transcribe` for uploaded speech-to-text, and `gpt-realtime-2` for live WebRTC audio sessions.
 
 ### Text And Device Pipeline
 
@@ -324,6 +329,7 @@ OPENAI_MODEL=gpt-5.5
 OPENAI_VISION_MODEL=gpt-5.5
 OPENAI_SUMMARY_MODEL=gpt-5.5
 OPENAI_TRANSCRIBE_MODEL=gpt-4o-transcribe
+OPENAI_REALTIME_MODEL=gpt-realtime-2
 ENABLE_DEVICE_IO=true
 SERIAL_PORT=your_serial_port_here
 ```
@@ -332,6 +338,7 @@ Important settings:
 
 - `MOCK_OPENAI`: keeps image and summary flows demo-safe without external model calls.
 - `MOCK_TRANSCRIBE`: keeps audio transcription demo-safe.
+- `OPENAI_REALTIME_MODEL`: selects the live microphone Realtime model used by `/realtime/session`.
 - `ENABLE_DEVICE_IO`: writes frames to the serial device when true; preview-only when false.
 - `DEVICE_FORMAT`: `text4` for four-character chunks or `braille` for cell bytes.
 - `SERIAL_PORT` and `SERIAL_BAUD`: device connection settings.

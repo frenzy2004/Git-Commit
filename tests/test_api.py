@@ -11,6 +11,7 @@ from backend.main import create_app
 def client(monkeypatch):
     monkeypatch.setenv("MOCK_OPENAI", "true")
     monkeypatch.setenv("MOCK_TRANSCRIBE", "true")
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
     monkeypatch.setenv("ENABLE_DEVICE_IO", "false")
     monkeypatch.setenv("DEVICE_FORMAT", "text4")
     monkeypatch.setenv("MAX_IMAGE_BYTES", str(10 * 1024 * 1024))
@@ -61,6 +62,40 @@ def test_lecture_endpoint_keeps_frontend_contract(client):
     assert payload["transcript"]
     assert len(payload["simple_sentences"]) == 2
     assert payload["device"]["chunks"]
+
+
+def test_realtime_session_endpoint_returns_sdp(monkeypatch):
+    monkeypatch.setenv("OPENAI_API_KEY", "test-key")
+    monkeypatch.setenv("OPENAI_REALTIME_MODEL", "gpt-realtime-2")
+
+    def fake_realtime_call(offer_sdp, settings):
+        assert offer_sdp == "v=0"
+        assert settings.realtime_model == "gpt-realtime-2"
+        return "v=0\r\nanswer"
+
+    monkeypatch.setattr("backend.main.create_realtime_call", fake_realtime_call)
+
+    with TestClient(create_app(get_settings())) as api:
+        response = api.post(
+            "/realtime/session",
+            content="v=0",
+            headers={"content-type": "application/sdp"},
+        )
+
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("application/sdp")
+    assert response.text == "v=0\r\nanswer"
+
+
+def test_realtime_session_requires_sdp(client):
+    response = client.post(
+        "/realtime/session",
+        content="",
+        headers={"content-type": "application/sdp"},
+    )
+
+    assert response.status_code == 400
+    assert response.json()["detail"] == "Missing SDP offer"
 
 
 def test_rejects_oversized_upload_before_pipeline(monkeypatch):
