@@ -407,3 +407,71 @@
       try { state.recorder.stop(); } catch {}
     }
     state.recorder = null;
+    state.audioParts = [];
+    state.audioBlob = null;
+    state.audioName = "recording.webm";
+    dom.audioFile.value = "";
+    dom.wave.classList.remove("active", "ready");
+    dom.audioLabel.textContent = "Press record or upload an audio file";
+    dom.record.disabled = false;
+    dom.stop.disabled = true;
+    dom.clearAudio.disabled = true;
+    dom.sendAudio.disabled = true;
+    hideOutput();
+  }
+
+  function loadAudio(blob, name) {
+    state.audioBlob = blob;
+    state.audioName = name;
+    dom.wave.classList.remove("active");
+    dom.wave.classList.add("ready");
+    dom.audioLabel.textContent = `Audio loaded · ${name}`;
+    dom.clearAudio.disabled = false;
+    dom.sendAudio.disabled = false;
+  }
+
+  async function startRecording() {
+    try {
+      if (!window.MediaRecorder) {
+        throw new Error("This browser does not support in-browser audio recording.");
+      }
+      hideOutput();
+      state.audioBlob = null;
+      state.audioParts = [];
+      dom.audioFile.value = "";
+
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      state.recorder = new MediaRecorder(stream);
+      state.recorder.ondataavailable = event => {
+        if (event.data.size > 0) state.audioParts.push(event.data);
+      };
+      state.recorder.onstop = () => {
+        stream.getTracks().forEach(track => track.stop());
+        loadAudio(new Blob(state.audioParts, { type: "audio/webm" }), "recording.webm");
+        dom.record.disabled = false;
+        dom.stop.disabled = true;
+      };
+
+      state.recorder.start(250);
+      dom.wave.classList.remove("ready");
+      dom.wave.classList.add("active");
+      dom.audioLabel.textContent = "Recording…";
+      dom.record.disabled = true;
+      dom.stop.disabled = false;
+      dom.clearAudio.disabled = false;
+      dom.sendAudio.disabled = true;
+    } catch (error) {
+      showProblem(`Audio setup failed: ${error.message}`);
+    }
+  }
+
+  function stopRecording() {
+    if (state.recorder?.state === "recording") {
+      state.recorder.stop();
+    }
+    dom.stop.disabled = true;
+  }
+
+  async function sendAudio() {
+    if (!state.audioBlob) return;
+    const form = new FormData();
