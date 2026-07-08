@@ -214,3 +214,24 @@ pip install -r backend/requirements-dev.txt
 Run:
 
 ```bash
+pytest
+```
+
+The tests cover:
+
+- Health endpoint shape.
+- Image endpoint contract.
+- Audio endpoint contract.
+- Upload size rejection.
+- Text normalization and four-character chunking.
+- Summary trimming helpers.
+
+## Troubleshooting
+
+If the frontend says the backend is offline, confirm the API is running on `127.0.0.1:8000`.
+
+If live image or summary processing fails, confirm `ANTHROPIC_API_KEY` is set and `MOCK_CLAUDE=false`.
+
+If live audio transcription fails, install `backend/requirements-full.txt` and confirm `MOCK_TRANSCRIBE=false`.
+
+If hardware does not move, confirm `ENABLE_DEVICE_IO=true`, the serial port is correct, and the ESP32 monitor is not holding the same port open.
