@@ -299,3 +299,103 @@ input {
 .feature-card h2,
 .feature-card h3 {
   color: var(--ink-main);
+  font-weight: 600;
+}
+
+.feature-card h2 {
+  margin-bottom: 10px;
+  font-size: 28px;
+}
+
+.feature-card h3 {
+  margin-bottom: 10px;
+  font-size: 18px;
+}
+
+.feature-card p {
+  color: var(--ink-soft);
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.feature-card:not(.feature-lead) p {
+  max-width: 30ch;
+  margin-inline: auto;
+}
+
+.feature-symbol {
+  width: 36px;
+  height: 36px;
+  justify-content: center;
+  margin: 0 auto 14px;
+  border-radius: 10px;
+  background: var(--cyan-wash);
+  color: var(--cyan);
+}
+
+.quick-actions,
+.button-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.quick-actions {
+  justify-content: center;
+  gap: 10px;
+}
+
+.screen-head h2 {
+  margin-bottom: 4px;
+  color: var(--ink-main);
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.screen-head p {
+  max-width: 78ch;
+  color: var(--ink-soft);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.tool-card,
+.wait-card,
+.answer-card,
+.problem-card {
+  width: 100%;
+  border: 1px solid var(--stroke);
+  background: var(--glass);
+}
+
+.tool-card {
+  max-width: 100%;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.camera-box {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.camera-box video,
+.camera-box img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: none;
+  object-fit: cover;
+}
+
+.camera-box video.active,
+.camera-box img.active {
+  display: block;
+}
+
+.empty-media {
+  position: absolute;
