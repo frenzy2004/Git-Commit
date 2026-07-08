@@ -339,3 +339,71 @@
     dom.sendImage.disabled = true;
     dom.clearImage.disabled = true;
     dom.cameraLabel.textContent = "Start camera";
+    showImageSource("empty");
+    hideOutput();
+  }
+
+  function acceptImage(blob) {
+    state.imageBlob = blob;
+    revokeImageUrl();
+    state.imageObjectUrl = URL.createObjectURL(blob);
+    dom.imagePreview.src = state.imageObjectUrl;
+    dom.sendImage.disabled = false;
+    dom.clearImage.disabled = false;
+    dom.cameraLabel.textContent = "Restart camera";
+    showImageSource("preview");
+  }
+
+  async function beginCamera() {
+    try {
+      hideOutput();
+      stopCamera();
+      revokeImageUrl();
+      state.imageBlob = null;
+      dom.imagePreview.removeAttribute("src");
+      dom.sendImage.disabled = true;
+      state.cameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+      dom.camera.srcObject = state.cameraStream;
+      dom.capture.disabled = false;
+      dom.clearImage.disabled = false;
+      dom.cameraLabel.textContent = "Camera ready";
+      showImageSource("camera");
+    } catch (error) {
+      showProblem(`Camera access denied: ${error.message}`);
+    }
+  }
+
+  function captureImage() {
+    dom.canvas.width = dom.camera.videoWidth;
+    dom.canvas.height = dom.camera.videoHeight;
+    dom.canvas.getContext("2d").drawImage(dom.camera, 0, 0);
+    dom.canvas.toBlob(blob => {
+      if (!blob) {
+        showProblem("Could not capture an image.");
+        return;
+      }
+      stopCamera();
+      acceptImage(blob);
+    }, "image/jpeg", 0.85);
+  }
+
+  async function sendImage() {
+    if (!state.imageBlob) return;
+    const form = new FormData();
+    form.append("file", state.imageBlob, "image.jpg");
+    showLoading();
+    dom.sendImage.disabled = true;
+    try {
+      showAnswer(await requestJson("/image", { method: "POST", body: form }));
+    } catch (error) {
+      showProblem(`Error: ${error.message}`);
+    } finally {
+      dom.sendImage.disabled = false;
+    }
+  }
+
+  function resetAudio() {
+    if (state.recorder?.state === "recording") {
+      try { state.recorder.stop(); } catch {}
+    }
+    state.recorder = null;
