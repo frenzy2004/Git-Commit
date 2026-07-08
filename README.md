@@ -106,3 +106,25 @@ MOCK_TRANSCRIBE=false
 ENABLE_DEVICE_IO=true
 DEVICE_FORMAT=text4
 SERIAL_PORT=your_serial_port_here
+SERIAL_BAUD=115200
+SERIAL_CHUNK_DELAY_MS=0
+```
+
+Optional tuning:
+
+```env
+ANTHROPIC_MODEL=claude-opus-4-8
+ANTHROPIC_VISION_MODEL=claude-opus-4-8
+ANTHROPIC_SUMMARY_MODEL=claude-opus-4-8
+WHISPER_MODEL=base
+CORS_ORIGINS=http://127.0.0.1:4173,http://localhost:4173
+MAX_IMAGE_BYTES=10485760
+MAX_AUDIO_BYTES=52428800
+```
+
+## API Contract
+
+### `GET /health`
+
+Returns service status, demo-mode state, device transport settings, and dependency availability.
+
