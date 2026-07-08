@@ -271,3 +271,71 @@
     dom.result.classList.add("is-hidden");
     dom.error.classList.add("is-hidden");
     dom.sentences.classList.add("is-hidden");
+    dom.summary.classList.remove("is-hidden");
+  }
+
+  function showProblem(message) {
+    dom.loading.classList.add("is-hidden");
+    dom.errorCopy.textContent = message;
+    dom.error.classList.remove("is-hidden");
+  }
+
+  function showAnswer(data) {
+    const text = data.simple_text || data.summary || "";
+    const sentences = Array.isArray(data.simple_sentences)
+      ? data.simple_sentences.filter(Boolean)
+      : text.split(/(?<=[.!?])\s+/).map(part => part.trim()).filter(Boolean);
+
+    dom.loading.classList.add("is-hidden");
+    dom.summary.textContent = text;
+    dom.resultMeta.textContent = `${data.mode === "image" ? "From image" : "From audio"} · essential only${state.apiHealth?.demo_mode ? " · demo mode" : ""}`;
+    dom.sentences.replaceChildren();
+
+    if (sentences.length > 1) {
+      sentences.slice(0, 2).forEach((sentence, index) => {
+        const item = document.createElement("li");
+        item.className = "sentence-card";
+        item.innerHTML = `<span>${index + 1}</span><p></p>`;
+        item.querySelector("p").textContent = sentence;
+        dom.sentences.appendChild(item);
+      });
+      dom.summary.classList.add("is-hidden");
+      dom.sentences.classList.remove("is-hidden");
+    } else {
+      dom.summary.classList.remove("is-hidden");
+      dom.sentences.classList.add("is-hidden");
+    }
+
+    dom.result.classList.remove("is-hidden");
+  }
+
+  function revokeImageUrl() {
+    if (state.imageObjectUrl) {
+      URL.revokeObjectURL(state.imageObjectUrl);
+      state.imageObjectUrl = null;
+    }
+  }
+
+  function stopCamera() {
+    if (state.cameraStream) {
+      state.cameraStream.getTracks().forEach(track => track.stop());
+      state.cameraStream = null;
+    }
+    dom.capture.disabled = true;
+  }
+
+  function showImageSource(which) {
+    dom.camera.classList.toggle("active", which === "camera");
+    dom.imagePreview.classList.toggle("active", which === "preview");
+    dom.imageEmpty.classList.toggle("is-hidden", which !== "empty");
+  }
+
+  function resetImage() {
+    stopCamera();
+    revokeImageUrl();
+    state.imageBlob = null;
+    dom.imagePreview.removeAttribute("src");
+    dom.imageFile.value = "";
+    dom.sendImage.disabled = true;
+    dom.clearImage.disabled = true;
+    dom.cameraLabel.textContent = "Start camera";
