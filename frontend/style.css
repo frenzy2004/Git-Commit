@@ -399,3 +399,104 @@ input {
 
 .empty-media {
   position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 10px;
+  color: var(--ink-dim);
+  font-size: 13px;
+}
+
+.empty-media svg {
+  opacity: 0.4;
+}
+
+.sound-box {
+  min-height: 220px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 18px;
+  padding: 56px 28px;
+}
+
+.sound-box p {
+  width: min(100%, 72ch);
+  max-width: 100%;
+  color: var(--ink-soft);
+  font-size: 13px;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.bars {
+  height: 56px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.bars i {
+  width: 4px;
+  height: 14px;
+  display: block;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.16);
+  transition: height 150ms ease, background 150ms ease;
+}
+
+.bars.ready i {
+  background: rgba(94, 234, 212, 0.55);
+}
+
+.bars.active i {
+  background: var(--cyan);
+  animation: bar-rise 850ms ease-in-out infinite;
+}
+
+.bars.active i:nth-child(1),
+.bars.active i:nth-child(10) { animation-delay: 0ms; }
+.bars.active i:nth-child(2),
+.bars.active i:nth-child(8) { animation-delay: 100ms; }
+.bars.active i:nth-child(3),
+.bars.active i:nth-child(7) { animation-delay: 200ms; }
+.bars.active i:nth-child(4),
+.bars.active i:nth-child(6) { animation-delay: 300ms; }
+.bars.active i:nth-child(5) { animation-delay: 400ms; }
+.bars.active i:nth-child(9) { animation-delay: 50ms; }
+
+@keyframes bar-rise {
+  0%, 100% { height: 12px; }
+  50% { height: 44px; }
+}
+
+.button-row {
+  gap: 8px;
+  padding: 14px 16px;
+  border-top: 1px solid var(--stroke);
+}
+
+.push-end {
+  margin-left: auto;
+}
+
+.control {
+  justify-content: center;
+  gap: 7px;
+  padding: 8px 13px;
+  border: 1px solid var(--stroke-bold);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.025);
+  color: var(--ink-main);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  transition:
+    background 120ms ease,
+    border-color 120ms ease,
+    color 120ms ease,
+    opacity 120ms ease;
+}
+
