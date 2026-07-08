@@ -88,7 +88,7 @@
           <div class="hero-copy">
             <div class="hero-brand">${brandMark("large")}<span>Fingertips</span></div>
             <h1>Turn the world into touch.</h1>
-            <p>Point a camera at a scene or speak aloud - Fingertip compresses it to the one thing that matters and sends it to the tactile display as braille.</p>
+            <p>For deaf, blind, and deafblind users, Fingertip turns scenes and speech into braille for the tactile display.</p>
             <div class="hero-actions">
               <button class="primary-action" type="button" data-jump="image" data-demo-image>Start with image ${icon("arrow", 15)}</button>
               <button class="secondary-action" type="button" data-jump="audio">Start with audio</button>
