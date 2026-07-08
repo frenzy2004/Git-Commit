@@ -124,3 +124,66 @@ void moveMotorsTogether(const float targetAngles[MOTOR_COUNT]) {
         stepMotor(motor, direction[motor]);
         remaining[motor]--;
         anyMoving = true;
+      }
+    }
+
+    if (anyMoving) {
+      delay(STEP_DELAY_MS);
+    }
+  }
+
+  for (uint8_t motor = 0; motor < MOTOR_COUNT; motor++) {
+    motorStepPosition[motor] = wrapSteps(stepsFromAngle(targetAngles[motor]));
+  }
+}
+
+void showFourCharacters(const String &chunk) {
+  float targets[MOTOR_COUNT] = {
+    angleForCharacter(chunk[0]),
+    angleForCharacter(chunk[1]),
+    angleForCharacter(chunk[2]),
+    angleForCharacter(chunk[3])
+  };
+
+  moveMotorsTogether(targets);
+}
+
+String normalizeChunk(String chunk) {
+  chunk.toLowerCase();
+  chunk.replace("\r", "");
+
+  while (chunk.length() < MOTOR_COUNT) {
+    chunk += ' ';
+  }
+
+  if (chunk.length() > MOTOR_COUNT) {
+    chunk = chunk.substring(0, MOTOR_COUNT);
+  }
+
+  return chunk;
+}
+
+void setup() {
+  for (uint8_t motor = 0; motor < MOTOR_COUNT; motor++) {
+    for (uint8_t pinIndex = 0; pinIndex < 4; pinIndex++) {
+      pinMode(MOTOR_PINS[motor][pinIndex], OUTPUT);
+    }
+    motorStepPosition[motor] = stepsFromAngle(REST_ANGLE);
+    motorPhase[motor] = 0;
+    releaseMotor(motor);
+  }
+
+  Serial.begin(115200);
+  Serial.setTimeout(50);
+}
+
+void loop() {
+  if (Serial.available() <= 0) {
+    return;
+  }
+
+  String chunk = normalizeChunk(Serial.readStringUntil('\n'));
+  showFourCharacters(chunk);
+  delay(CHUNK_HOLD_MS);
+  releaseAllMotors();
+}
