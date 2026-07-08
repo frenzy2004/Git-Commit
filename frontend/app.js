@@ -203,3 +203,71 @@
     sendImage: root.querySelector("[data-send-image]"),
     wave: root.querySelector("[data-wave]"),
     audioLabel: root.querySelector("[data-audio-label]"),
+    record: root.querySelector("[data-record]"),
+    stop: root.querySelector("[data-stop]"),
+    audioFile: root.querySelector("[data-audio-file]"),
+    clearAudio: root.querySelector("[data-clear-audio]"),
+    sendAudio: root.querySelector("[data-send-audio]"),
+  };
+
+  function setMode(mode) {
+    root.querySelectorAll("[data-mode]").forEach(button => {
+      button.classList.toggle("selected", button.dataset.mode === mode);
+    });
+    root.querySelectorAll("[data-panel]").forEach(panel => {
+      panel.classList.toggle("showing", panel.dataset.panel === mode);
+    });
+    if (mode !== "image") {
+      stopCamera();
+    }
+    hideOutput();
+  }
+
+  function setApiBadge(kind, label, copy) {
+    dom.apiPill.className = `api-pill ${kind}`;
+    dom.apiLabel.textContent = label;
+    dom.apiCopy.textContent = copy;
+  }
+
+  async function refreshHealth() {
+    try {
+      const response = await fetch(`${apiBase}/health`, { headers: { Accept: "application/json" } });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      state.apiHealth = await response.json();
+      if (state.apiHealth.demo_mode) {
+        setApiBadge("demo", "Demo API", "Demo fallbacks active. UI runs without every dependency.");
+      } else {
+        setApiBadge("live", "Live API", "Live backend connected.");
+      }
+    } catch {
+      state.apiHealth = null;
+      setApiBadge("offline", "Backend offline", `Could not reach ${apiBase}.`);
+    }
+  }
+
+  async function requestJson(path, options) {
+    const response = await fetch(`${apiBase}${path}`, options);
+    const body = await response.text();
+    let data;
+    try {
+      data = body ? JSON.parse(body) : {};
+    } catch {
+      data = { detail: body || response.statusText };
+    }
+    if (!response.ok) {
+      throw new Error(data.detail || response.statusText);
+    }
+    return data;
+  }
+
+  function showLoading() {
+    dom.loading.classList.remove("is-hidden");
+    dom.result.classList.add("is-hidden");
+    dom.error.classList.add("is-hidden");
+  }
+
+  function hideOutput() {
+    dom.loading.classList.add("is-hidden");
+    dom.result.classList.add("is-hidden");
+    dom.error.classList.add("is-hidden");
+    dom.sentences.classList.add("is-hidden");
