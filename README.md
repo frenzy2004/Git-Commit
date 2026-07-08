@@ -171,3 +171,24 @@ Both processing endpoints return:
 ```
 
 `serial` is kept as an alias for older UI integrations. New code should prefer `device`.
+
+## Device Protocol
+
+The firmware expects newline-terminated chunks of exactly four characters:
+
+```text
+abcd\n
+efgh\n
+```
+
+The backend default is therefore:
+
+```env
+DEVICE_FORMAT=text4
+SERIAL_BAUD=115200
+SERIAL_CHUNK_DELAY_MS=0
+```
+
+The ESP32 controls the display hold time. The backend writes each chunk and lets the firmware advance at its own pace.
+
+## Hardware Notes
