@@ -1,0 +1,17 @@
+{
+  "status": "ok",
+  "demo_mode": true,
+  "device_transport": {
+    "enabled": false,
+    "mode": "preview-only",
+    "format": "text4"
+  },
+  "services": {
+    "vision": true,
+    "lecture_summary": true,
+    "transcription": true,
+    "braille": false,
+    "serial": true,
+    "device_preview": true
+  }
+}

@@ -1,50 +1,46 @@
 # Fingertips
 
-Fingertips is a classroom-access prototype for deaf-blind learners. It accepts classroom images or spoken audio, extracts the essential learning point, and prepares the result for a four-character tactile display driven by an ESP32.
-
-The project is built for demos first: it runs without cloud keys by default, exposes clear API responses, and can switch to live model, transcription, and device I/O when the hardware and credentials are available.
-
-## What Fingertips Does
-
-- Captures or uploads textbook pages, slides, worksheets, diagrams, and scenes.
-- Records or uploads classroom audio.
-- Converts image or speech input into one or two short, plain-language sentences.
-- Normalizes the final text into predictable ASCII for tactile playback.
-- Splits output into four-character chunks for the ESP32 firmware.
-- Provides serial preview data even when hardware output is disabled.
-- Keeps the browser UI simple enough for a fast presentation or classroom workflow.
-
-## Architecture
+Fingertips is a classroom-access prototype for deaf-blind learners. It turns classroom images and spoken audio into short, tactile-ready learning notes, then prepares the text for a four-character ESP32 display.
 
 ```text
-frontend/
-  index.html          Minimal browser shell
-  app.js              UI rendering, camera/audio capture, API calls
-  style.css           Responsive application styling
-
-backend/
-  main.py             FastAPI routes and app factory
-  config.py           Environment-backed settings
-  uploads.py          File type and size validation
-  pipeline.py         Image/audio processing orchestration
-  vision.py           Optional Claude image adapter
-  summarizer.py       Optional Claude transcript adapter
-  audio.py            Optional local Whisper transcription
-  text_utils.py       Sentence splitting and summary trimming
-  braille.py          Braille cell translation with fallback mapping
-  serial_out.py       Text chunk and serial payload generation
-
-hardware/
-  Braille_hardware.ino  ESP32 firmware for four motor positions
-
-tests/
-  test_api.py
-  test_device_text.py
+Image or audio input -> concise learning note -> text4 chunks -> optional serial output
 ```
+
+## Highlights
+
+- Static browser app for image capture, image upload, audio recording, and audio upload.
+- FastAPI backend with stable demo-mode responses.
+- Optional Claude adapters for image understanding and transcript summarization.
+- Optional local transcription through `faster-whisper`.
+- Four-character text chunking for tactile hardware playback.
+- ESP32 firmware for motor-position display experiments.
+- Tests, examples, helper scripts, and CI workflow included.
+
+## Repository Map
+
+```text
+.github/workflows/   CI checks
+backend/             FastAPI app, model adapters, text shaping, serial payloads
+docs/                Architecture, API, device protocol, demo guide
+examples/            Example API responses and text4 chunks
+frontend/            Browser interface
+hardware/            ESP32 firmware
+scripts/             Local helper commands
+tests/               API and text utility tests
+```
+
+## Documentation
+
+- [Architecture](docs/ARCHITECTURE.md)
+- [API](docs/API.md)
+- [Device protocol](docs/DEVICE_PROTOCOL.md)
+- [Demo guide](docs/DEMO_GUIDE.md)
+- [Contributing](CONTRIBUTING.md)
+- [Security](SECURITY.md)
 
 ## Quick Start
 
-Use the standard dependency set for demo mode:
+Install the default demo dependencies:
 
 ```bash
 python -m venv .venv
@@ -52,13 +48,13 @@ python -m venv .venv
 pip install -r backend/requirements.txt
 ```
 
-Start the API:
+Start the backend:
 
 ```bash
 python -m uvicorn backend.main:app --host 127.0.0.1 --port 8000
 ```
 
-Start the frontend in a second terminal:
+Start the frontend:
 
 ```bash
 cd frontend
@@ -71,167 +67,98 @@ Open:
 http://127.0.0.1:4173
 ```
 
-Health check:
+## Helper Scripts
 
-```text
-http://127.0.0.1:8000/health
+PowerShell helpers are available for Windows:
+
+```powershell
+scripts\start-backend.ps1
+scripts\start-frontend.ps1
+scripts\test.ps1
 ```
 
-## Demo Mode
+## Configuration
 
-Demo mode is enabled by default:
+Copy `.env.example` to `backend/.env` and adjust values as needed.
+
+Demo defaults:
 
 ```env
 MOCK_CLAUDE=true
 MOCK_TRANSCRIBE=true
 ENABLE_DEVICE_IO=false
+DEVICE_FORMAT=text4
 ```
 
-In this mode, image and audio endpoints return stable mock summaries. This keeps the app runnable on any laptop without API keys, model downloads, microphones, or attached hardware.
-
-## Live Mode
-
-Install the optional stack:
+Live mode:
 
 ```bash
 pip install -r backend/requirements-full.txt
 ```
 
-Create `backend/.env`:
+Then set:
 
 ```env
 ANTHROPIC_API_KEY=your_api_key_here
 MOCK_CLAUDE=false
 MOCK_TRANSCRIBE=false
 ENABLE_DEVICE_IO=true
-DEVICE_FORMAT=text4
 SERIAL_PORT=your_serial_port_here
-SERIAL_BAUD=115200
-SERIAL_CHUNK_DELAY_MS=0
 ```
 
-Optional tuning:
-
-```env
-ANTHROPIC_MODEL=claude-opus-4-8
-ANTHROPIC_VISION_MODEL=claude-opus-4-8
-ANTHROPIC_SUMMARY_MODEL=claude-opus-4-8
-WHISPER_MODEL=base
-CORS_ORIGINS=http://127.0.0.1:4173,http://localhost:4173
-MAX_IMAGE_BYTES=10485760
-MAX_AUDIO_BYTES=52428800
-```
-
-## API Contract
-
-### `GET /health`
-
-Returns service status, demo-mode state, device transport settings, and dependency availability.
-
-### `POST /image`
-
-Accepts an image file as multipart field `file`.
-
-Supported types:
+## API Overview
 
 ```text
-image/jpeg
-image/png
-image/webp
-image/gif
+GET  /health
+POST /image
+POST /lecture
 ```
 
-### `POST /lecture`
-
-Accepts an audio file as multipart field `file`.
-
-Supported common inputs include WebM, WAV, MP3, OGG, MP4, M4A, and AAC.
-
-### Response Shape
-
-Both processing endpoints return:
+Both processing endpoints return learner-facing summary text plus a device payload:
 
 ```json
 {
-  "mode": "image",
-  "simple_text": "Short learner-facing text.",
-  "simple_sentences": ["Short learner-facing text."],
-  "summary": "Short learner-facing text.",
-  "cell_count": 12,
-  "braille_preview": "hex preview or text chunk preview",
+  "simple_text": "This picture has one important idea.",
+  "simple_sentences": ["This picture has one important idea."],
   "device": {
-    "transport": "serial",
     "format": "text4",
-    "enabled": false,
-    "sent": false,
-    "chunks": ["shor", "t le"]
-  },
-  "serial": {}
+    "chunks": ["this", " pic", "ture"]
+  }
 }
 ```
 
-`serial` is kept as an alias for older UI integrations. New code should prefer `device`.
+See [docs/API.md](docs/API.md) for the full response shape.
 
-## Device Protocol
+## Device Flow
 
-The firmware expects newline-terminated chunks of exactly four characters:
+The backend emits newline-terminated four-character chunks:
 
 ```text
-abcd\n
-efgh\n
+this\n
+ pic\n
+ture\n
 ```
 
-The backend default is therefore:
+The firmware reads each line, maps the characters to calibrated motor angles, holds the display position, and releases the motors before the next chunk.
 
-```env
-DEVICE_FORMAT=text4
-SERIAL_BAUD=115200
-SERIAL_CHUNK_DELAY_MS=0
-```
-
-The ESP32 controls the display hold time. The backend writes each chunk and lets the firmware advance at its own pace.
-
-## Hardware Notes
-
-The included firmware:
-
-- Uses four 28BYJ-48 stepper motors through ULN2003 driver boards.
-- Maps each supported character to a calibrated motor angle.
-- Reads serial input at `115200`.
-- Displays four characters at a time.
-- Releases the motors after the hold interval.
-
-Update the pin map and angle table in `hardware/Braille_hardware.ino` if your physical build differs.
-
-## Tests
-
-Install development dependencies:
+## Testing
 
 ```bash
 pip install -r backend/requirements-dev.txt
-```
-
-Run:
-
-```bash
 pytest
+node --check frontend/app.js
 ```
 
-The tests cover:
+Current test coverage includes:
 
-- Health endpoint shape.
+- Health endpoint response.
 - Image endpoint contract.
 - Audio endpoint contract.
-- Upload size rejection.
-- Text normalization and four-character chunking.
-- Summary trimming helpers.
+- Upload size limits.
+- Text normalization.
+- Four-character chunking.
+- Summary trimming.
 
-## Troubleshooting
+## Project Status
 
-If the frontend says the backend is offline, confirm the API is running on `127.0.0.1:8000`.
-
-If live image or summary processing fails, confirm `ANTHROPIC_API_KEY` is set and `MOCK_CLAUDE=false`.
-
-If live audio transcription fails, install `backend/requirements-full.txt` and confirm `MOCK_TRANSCRIBE=false`.
-
-If hardware does not move, confirm `ENABLE_DEVICE_IO=true`, the serial port is correct, and the ESP32 monitor is not holding the same port open.
+Fingertips is a prototype meant for demos, learning, and hardware iteration. Keep demo mode working by default, and enable live integrations only when API credentials, local transcription dependencies, and supervised hardware are ready.

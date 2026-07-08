@@ -1,0 +1,24 @@
+{
+  "mode": "image",
+  "simple_text": "This picture has one important idea.",
+  "simple_sentences": [
+    "This picture has one important idea."
+  ],
+  "summary": "This picture has one important idea.",
+  "cell_count": 36,
+  "braille_preview": "this |  pic | ture",
+  "device": {
+    "transport": "serial",
+    "format": "text4",
+    "enabled": false,
+    "sent": false,
+    "normalized_text": "this picture has one important idea.",
+    "chunk_count": 9,
+    "chunks": [
+      "this",
+      " pic",
+      "ture"
+    ],
+    "preview": "this |  pic | ture"
+  }
+}
