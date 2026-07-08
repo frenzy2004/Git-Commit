@@ -99,3 +99,103 @@ input {
   background: var(--cyan);
 }
 
+.brand-dots i:nth-child(2),
+.brand-dots i:nth-child(4),
+.brand-dots i:nth-child(5) {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.brand-dots.large {
+  grid-template-columns: repeat(2, 13px);
+  gap: 6px;
+}
+
+.brand-dots.large i {
+  width: 13px;
+  height: 13px;
+}
+
+.mode-list {
+  display: grid;
+  gap: 2px;
+}
+
+.mode-choice {
+  width: 100%;
+  gap: 10px;
+  padding: 9px 11px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ink-soft);
+  cursor: pointer;
+  font-size: 13.5px;
+  font-weight: 500;
+  text-align: left;
+  transition: color 120ms ease, background 120ms ease;
+}
+
+.mode-choice svg {
+  flex: none;
+  opacity: 0.85;
+}
+
+.mode-choice:hover,
+.mode-choice.selected {
+  color: var(--ink-main);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.rail-status {
+  margin-top: auto;
+}
+
+.api-pill {
+  gap: 8px;
+  padding: 9px 11px;
+  border: 1px solid var(--stroke);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.025);
+  color: var(--ink-soft);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.api-dot {
+  width: 6px;
+  height: 6px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--ink-dim);
+}
+
+.api-pill.live .api-dot,
+.api-pill.demo .api-dot {
+  background: var(--cyan);
+}
+
+.api-pill.offline {
+  color: #fecaca;
+}
+
+.api-pill.offline .api-dot {
+  background: var(--bad);
+}
+
+.rail-status p {
+  margin-top: 8px;
+  padding: 0 4px;
+  color: var(--ink-dim);
+  font-size: 11.5px;
+  line-height: 1.45;
+}
+
+.stage {
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 36px;
+  padding: 56px 56px 96px;
+  overflow-x: hidden;
+}
