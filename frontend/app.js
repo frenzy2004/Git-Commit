@@ -87,24 +87,24 @@
         <header class="hero">
           <div class="hero-copy">
             <div class="hero-brand">${brandMark("large")}<span>Fingertips</span></div>
-            <h1>Turn lessons into tactile-ready notes.</h1>
-            <p>Upload a classroom image or recording and get a short, plain-language summary with four-character chunks ready for the tactile device flow.</p>
+            <h1>Turn the world into touch.</h1>
+            <p>Point a camera at a scene or speak aloud - Fingertip compresses it to the one thing that matters and sends it to the tactile display as braille.</p>
             <div class="hero-actions">
               <button class="primary-action" type="button" data-jump="image" data-demo-image>Start with image ${icon("arrow", 15)}</button>
               <button class="secondary-action" type="button" data-jump="audio">Start with audio</button>
             </div>
           </div>
           <div class="process-panel" aria-label="Processing flow">
-            <div class="process-step"><span>01</span><strong>Capture</strong><p>Upload a page, scene, or classroom recording.</p></div>
-            <div class="process-step"><span>02</span><strong>Condense</strong><p>Keep the main learning point in simple wording.</p></div>
-            <div class="process-step"><span>03</span><strong>Output</strong><p>Preview normalized chunks for the hardware display.</p></div>
+            <div class="process-step"><span>01</span><strong>Capture</strong><p>Capture a scene, an object, or a spoken sentence.</p></div>
+            <div class="process-step"><span>02</span><strong>Condense</strong><p>Keep the one essential idea, in plain words.</p></div>
+            <div class="process-step"><span>03</span><strong>Output</strong><p>Send braille cells to the tactile display.</p></div>
           </div>
         </header>
 
         <section class="home-grid" aria-label="Core workflows">
-          ${workflowCard("image", "Image input", "Worksheets, slides, boards, diagrams, and scenes.", "Try images", "image")}
-          ${workflowCard("audio", "Audio input", "Recorded explanations become compact learner notes.", "Try audio", "audio")}
-          ${featureCard("tactile", "Device-ready chunks", "Preview normalized four-character output for serial transport.")}
+          ${workflowCard("image", "Scene input", "Objects, faces, signs, and surroundings.", "Try images", "image")}
+          ${workflowCard("audio", "Speech input", "Spoken words become a short tactile note.", "Try audio", "audio")}
+          ${featureCard("tactile", "Braille output", "6-dot cells drive the moving-pin display.")}
         </section>
       </section>
     `;
@@ -123,7 +123,7 @@
   }
 
   function featureCard(symbol, heading, copy) {
-    return `<article class="workflow-card quiet"><div class="card-icon">${icon(symbol, 18)}</div><h2>${heading}</h2><p>${copy}</p><span class="card-note">text4 serial preview</span></article>`;
+    return `<article class="workflow-card quiet"><div class="card-icon">${icon(symbol, 18)}</div><h2>${heading}</h2><p>${copy}</p><span class="card-note">braille cell preview</span></article>`;
   }
 
   function imagePanel() {
