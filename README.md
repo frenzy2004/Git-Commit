@@ -128,3 +128,24 @@ MAX_AUDIO_BYTES=52428800
 
 Returns service status, demo-mode state, device transport settings, and dependency availability.
 
+### `POST /image`
+
+Accepts an image file as multipart field `file`.
+
+Supported types:
+
+```text
+image/jpeg
+image/png
+image/webp
+image/gif
+```
+
+### `POST /lecture`
+
+Accepts an audio file as multipart field `file`.
+
+Supported common inputs include WebM, WAV, MP3, OGG, MP4, M4A, and AAC.
+
+### Response Shape
+
