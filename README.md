@@ -85,3 +85,24 @@ Demo mode is enabled by default:
 MOCK_CLAUDE=true
 MOCK_TRANSCRIBE=true
 ENABLE_DEVICE_IO=false
+```
+
+In this mode, image and audio endpoints return stable mock summaries. This keeps the app runnable on any laptop without API keys, model downloads, microphones, or attached hardware.
+
+## Live Mode
+
+Install the optional stack:
+
+```bash
+pip install -r backend/requirements-full.txt
+```
+
+Create `backend/.env`:
+
+```env
+ANTHROPIC_API_KEY=your_api_key_here
+MOCK_CLAUDE=false
+MOCK_TRANSCRIBE=false
+ENABLE_DEVICE_IO=true
+DEVICE_FORMAT=text4
+SERIAL_PORT=your_serial_port_here
