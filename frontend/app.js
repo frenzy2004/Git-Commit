@@ -135,3 +135,71 @@
       </section>
     `;
   }
+
+  function audioPanel() {
+    return `
+      <section class="screen" data-panel="audio">
+        <div class="screen-head">
+          <h2>Audio</h2>
+          <p>Record live or upload a recording. Fingertips transcribes the audio and keeps only the key takeaway.</p>
+        </div>
+
+        <div class="tool-card">
+          <div class="sound-box">
+            <div class="bars" data-wave aria-hidden="true">${"<i></i>".repeat(10)}</div>
+            <p data-audio-label>Press record or upload an audio file</p>
+          </div>
+          <div class="button-row">
+            <button class="control record" type="button" data-record><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="12" r="6"/></svg>Record</button>
+            <button class="control" type="button" data-stop disabled><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1"/></svg>Stop</button>
+            <label class="control">${icon("upload")}Upload<input type="file" data-audio-file accept="audio/*" /></label>
+            <button class="control" type="button" data-clear-audio disabled>Clear</button>
+            <button class="control accent push-end" type="button" data-send-audio disabled>Summarize ${icon("arrow")}</button>
+          </div>
+        </div>
+      </section>
+    `;
+  }
+
+  function outputPanel() {
+    return `
+      <div class="output-zone" aria-live="polite">
+        <div class="wait-card is-hidden" data-loading><span class="spinner"></span><p>Processing…</p></div>
+        <div class="answer-card is-hidden" data-result>
+          <div class="answer-head">
+            <div><h3>Essential Summary</h3><p data-result-meta></p></div>
+            <button class="copy-action" type="button" data-copy>${icon("copy")}<span>Copy</span></button>
+          </div>
+          <div class="summary-copy" data-summary></div>
+          <ol class="sentence-list is-hidden" data-sentences></ol>
+        </div>
+        <div class="problem-card is-hidden" data-error>${icon("alert", 16)}<span data-error-copy></span></div>
+      </div>
+    `;
+  }
+
+  renderShell();
+
+  const dom = {
+    apiPill: root.querySelector("[data-api-pill]"),
+    apiLabel: root.querySelector("[data-api-label]"),
+    apiCopy: root.querySelector("[data-api-copy]"),
+    loading: root.querySelector("[data-loading]"),
+    result: root.querySelector("[data-result]"),
+    resultMeta: root.querySelector("[data-result-meta]"),
+    summary: root.querySelector("[data-summary]"),
+    sentences: root.querySelector("[data-sentences]"),
+    error: root.querySelector("[data-error]"),
+    errorCopy: root.querySelector("[data-error-copy]"),
+    copyButton: root.querySelector("[data-copy]"),
+    camera: root.querySelector("[data-camera]"),
+    canvas: root.querySelector("[data-canvas]"),
+    imagePreview: root.querySelector("[data-image-preview]"),
+    imageEmpty: root.querySelector("[data-image-empty]"),
+    cameraLabel: root.querySelector("[data-camera-label]"),
+    capture: root.querySelector("[data-capture]"),
+    imageFile: root.querySelector("[data-image-file]"),
+    clearImage: root.querySelector("[data-clear-image]"),
+    sendImage: root.querySelector("[data-send-image]"),
+    wave: root.querySelector("[data-wave]"),
+    audioLabel: root.querySelector("[data-audio-label]"),
