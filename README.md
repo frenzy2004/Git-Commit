@@ -42,3 +42,24 @@ tests/
   test_device_text.py
 ```
 
+## Quick Start
+
+Use the standard dependency set for demo mode:
+
+```bash
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r backend/requirements.txt
+```
+
+Start the API:
+
+```bash
+python -m uvicorn backend.main:app --host 127.0.0.1 --port 8000
+```
+
+Start the frontend in a second terminal:
+
+```bash
+cd frontend
+python -m http.server 4173 --bind 127.0.0.1
