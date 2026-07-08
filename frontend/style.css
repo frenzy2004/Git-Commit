@@ -600,3 +600,103 @@ input {
   font-size: 17px;
   line-height: 1.65;
   overflow-wrap: anywhere;
+}
+
+.sentence-list {
+  display: grid;
+  gap: 10px;
+  width: 100%;
+  max-width: 100%;
+  list-style: none;
+}
+
+.sentence-card {
+  display: grid;
+  grid-template-columns: 28px 1fr;
+  gap: 14px;
+  align-items: start;
+  padding: 14px 16px;
+  border: 1px solid var(--stroke);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.sentence-card span {
+  width: 24px;
+  height: 24px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--cyan-wash);
+  color: var(--cyan);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.sentence-card p {
+  color: var(--ink-main);
+  font-size: 15px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.copy-action {
+  flex: none;
+  gap: 6px;
+  padding: 6px 10px;
+  border: 1px solid var(--stroke-bold);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ink-soft);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 500;
+  transition: color 120ms ease, border-color 120ms ease, background 120ms ease;
+}
+
+.copy-action:hover,
+.copy-action.copied {
+  border-color: rgba(94, 234, 212, 0.35);
+  background: var(--cyan-wash);
+  color: var(--cyan);
+}
+
+.problem-card {
+  gap: 10px;
+  padding: 14px 16px;
+  border-color: rgba(248, 113, 113, 0.22);
+  background: var(--bad-wash);
+  color: #fca5a5;
+  font-size: 13px;
+}
+
+.is-hidden {
+  display: none !important;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  border: 2px solid var(--canvas);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+@media (max-width: 900px) {
+  .stage {
+    padding: 40px 32px 72px;
+  }
+
+  .feature-grid {
+    grid-template-columns: 1fr;
