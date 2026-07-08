@@ -192,3 +192,25 @@ SERIAL_CHUNK_DELAY_MS=0
 The ESP32 controls the display hold time. The backend writes each chunk and lets the firmware advance at its own pace.
 
 ## Hardware Notes
+
+The included firmware:
+
+- Uses four 28BYJ-48 stepper motors through ULN2003 driver boards.
+- Maps each supported character to a calibrated motor angle.
+- Reads serial input at `115200`.
+- Displays four characters at a time.
+- Releases the motors after the hold interval.
+
+Update the pin map and angle table in `hardware/Braille_hardware.ino` if your physical build differs.
+
+## Tests
+
+Install development dependencies:
+
+```bash
+pip install -r backend/requirements-dev.txt
+```
+
+Run:
+
+```bash
