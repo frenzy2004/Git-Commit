@@ -20,3 +20,25 @@ The project is built for demos first: it runs without cloud keys by default, exp
 frontend/
   index.html          Minimal browser shell
   app.js              UI rendering, camera/audio capture, API calls
+  style.css           Responsive application styling
+
+backend/
+  main.py             FastAPI routes and app factory
+  config.py           Environment-backed settings
+  uploads.py          File type and size validation
+  pipeline.py         Image/audio processing orchestration
+  vision.py           Optional Claude image adapter
+  summarizer.py       Optional Claude transcript adapter
+  audio.py            Optional local Whisper transcription
+  text_utils.py       Sentence splitting and summary trimming
+  braille.py          Braille cell translation with fallback mapping
+  serial_out.py       Text chunk and serial payload generation
+
+hardware/
+  Braille_hardware.ino  ESP32 firmware for four motor positions
+
+tests/
+  test_api.py
+  test_device_text.py
+```
+
