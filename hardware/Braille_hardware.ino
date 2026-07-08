@@ -61,3 +61,66 @@ long wrapSteps(long steps) {
 long shortestDelta(long current, long target) {
   long delta = target - current;
   if (delta > HALF_TURN_STEPS) {
+    delta -= STEPS_PER_TURN;
+  } else if (delta < -HALF_TURN_STEPS) {
+    delta += STEPS_PER_TURN;
+  }
+  return delta;
+}
+
+void driveCoils(uint8_t motor, uint8_t phase) {
+  for (uint8_t pinIndex = 0; pinIndex < 4; pinIndex++) {
+    digitalWrite(MOTOR_PINS[motor][pinIndex], HALF_STEP_SEQUENCE[phase][pinIndex]);
+  }
+}
+
+void releaseMotor(uint8_t motor) {
+  for (uint8_t pinIndex = 0; pinIndex < 4; pinIndex++) {
+    digitalWrite(MOTOR_PINS[motor][pinIndex], LOW);
+  }
+}
+
+void releaseAllMotors() {
+  for (uint8_t motor = 0; motor < MOTOR_COUNT; motor++) {
+    releaseMotor(motor);
+  }
+}
+
+void stepMotor(uint8_t motor, int8_t direction) {
+  motorPhase[motor] = (motorPhase[motor] + direction + 8) % 8;
+  driveCoils(motor, motorPhase[motor]);
+  motorStepPosition[motor] = wrapSteps(motorStepPosition[motor] + direction);
+}
+
+float angleForCharacter(char rawCharacter) {
+  char value = tolower(rawCharacter);
+  for (const CharacterAngle &entry : CHARACTER_ANGLES) {
+    if (entry.value == value) {
+      return entry.angle;
+    }
+  }
+  return REST_ANGLE;
+}
+
+void moveMotorsTogether(const float targetAngles[MOTOR_COUNT]) {
+  long remaining[MOTOR_COUNT];
+  int8_t direction[MOTOR_COUNT];
+
+  for (uint8_t motor = 0; motor < MOTOR_COUNT; motor++) {
+    long targetSteps = wrapSteps(stepsFromAngle(targetAngles[motor]));
+    motorStepPosition[motor] = wrapSteps(motorStepPosition[motor]);
+
+    long delta = shortestDelta(motorStepPosition[motor], targetSteps);
+    direction[motor] = delta >= 0 ? 1 : -1;
+    remaining[motor] = abs(delta);
+  }
+
+  bool anyMoving = true;
+  while (anyMoving) {
+    anyMoving = false;
+
+    for (uint8_t motor = 0; motor < MOTOR_COUNT; motor++) {
+      if (remaining[motor] > 0) {
+        stepMotor(motor, direction[motor]);
+        remaining[motor]--;
+        anyMoving = true;
