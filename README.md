@@ -63,3 +63,25 @@ Start the frontend in a second terminal:
 ```bash
 cd frontend
 python -m http.server 4173 --bind 127.0.0.1
+```
+
+Open:
+
+```text
+http://127.0.0.1:4173
+```
+
+Health check:
+
+```text
+http://127.0.0.1:8000/health
+```
+
+## Demo Mode
+
+Demo mode is enabled by default:
+
+```env
+MOCK_CLAUDE=true
+MOCK_TRANSCRIBE=true
+ENABLE_DEVICE_IO=false
