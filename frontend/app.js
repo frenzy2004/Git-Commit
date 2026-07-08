@@ -31,40 +31,40 @@
     video: ['<polygon points="23 7 16 12 23 17 23 7"/>', '<rect x="1" y="5" width="15" height="14" rx="2"/>'],
     capture: ['<circle cx="12" cy="12" r="10"/>', '<circle cx="12" cy="12" r="3"/>'],
     upload: ['<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>', '<polyline points="17 8 12 3 7 8"/>', '<line x1="12" y1="3" x2="12" y2="15"/>'],
-    camera: ['<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>', '<circle cx="12" cy="13" r="4"/>'],
-    braille: ['<circle cx="6" cy="6" r="1.6"/>', '<circle cx="6" cy="12" r="1.6"/>', '<circle cx="6" cy="18" r="1.6"/>', '<circle cx="14" cy="6" r="1.6"/>', '<circle cx="14" cy="12" r="1.6"/>', '<circle cx="14" cy="18" r="1.6"/>', '<path d="M19 4v16"/>'],
+    tactile: ['<circle cx="6" cy="6" r="1.4"/>', '<circle cx="6" cy="12" r="1.4"/>', '<circle cx="6" cy="18" r="1.4"/>', '<circle cx="14" cy="6" r="1.4"/>', '<circle cx="14" cy="12" r="1.4"/>', '<circle cx="14" cy="18" r="1.4"/>', '<path d="M19 4v16"/>'],
+    text: ['<path d="M4 7h16"/>', '<path d="M4 12h13"/>', '<path d="M4 17h9"/>'],
     copy: ['<rect x="9" y="9" width="13" height="13" rx="2"/>', '<path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>'],
     alert: ['<circle cx="12" cy="12" r="10"/>', '<line x1="12" y1="8" x2="12" y2="12"/>', '<line x1="12" y1="16" x2="12.01" y2="16"/>'],
   };
 
-  function icon(name, size = 14, fill = "none") {
+  function icon(name, size = 16, fill = "none") {
     return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="${fill}" stroke="currentColor" stroke-width="${fill === "none" ? "2" : "0"}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${iconPaths[name].join("")}</svg>`;
   }
 
-  function brailleMark(extraClass = "") {
-    return `<span class="brand-dots ${extraClass}" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></span>`;
+  function brandMark(size = "small") {
+    return `<img class="brand-mark ${size}" src="assets/fingertips-logo.png" alt="" aria-hidden="true" />`;
   }
 
   function renderShell() {
     root.innerHTML = `
-      <div class="layout">
-        <aside class="rail">
-          <div class="logo-row">${brailleMark()}<span class="logo-word">Fingertips</span></div>
-          <nav class="mode-list" aria-label="Input mode">
+      <div class="app-shell">
+        <aside class="sidebar">
+          <div class="brand-lockup">${brandMark()}<span>Fingertips</span></div>
+          <nav class="nav-list" aria-label="Input mode">
             ${modeButton("home", "Home", "home", true)}
             ${modeButton("image", "Image", "image")}
             ${modeButton("audio", "Audio", "audio")}
           </nav>
-          <div class="rail-status">
-            <div class="api-pill" data-api-pill>
-              <span class="api-dot"></span>
-              <span data-api-label>Checking…</span>
+          <div class="status-card">
+            <div class="api-state" data-api-pill>
+              <span class="api-light"></span>
+              <span data-api-label>Checking...</span>
             </div>
-            <p data-api-copy>Auto-detecting backend.</p>
+            <p data-api-copy>Looking for the local API.</p>
           </div>
         </aside>
 
-        <main class="stage">
+        <main class="workspace">
           ${homePanel()}
           ${imagePanel()}
           ${audioPanel()}
@@ -75,61 +75,76 @@
   }
 
   function modeButton(mode, label, symbol, selected = false) {
-    return `<button class="mode-choice${selected ? " selected" : ""}" type="button" data-mode="${mode}">${icon(symbol, 18)}<span>${label}</span></button>`;
+    return `<button class="nav-button${selected ? " active" : ""}" type="button" data-mode="${mode}">${icon(symbol, 18)}<span>${label}</span></button>`;
   }
 
   function homePanel() {
     return `
-      <section class="screen home-screen showing" data-panel="home">
-        <header class="home-hero">
-          <div class="home-title">${brailleMark("large")}<h1>Fingertips</h1></div>
-          <p>Fingertips turns classroom images and audio into short, essential explanations for deaf-blind learners, then prepares the text for tactile playback on a future braille device.</p>
+      <section class="view home-view active" data-panel="home">
+        <header class="hero">
+          <div class="hero-copy">
+            <div class="hero-brand">${brandMark("large")}<span>Fingertips</span></div>
+            <h1>Turn lessons into tactile-ready notes.</h1>
+            <p>Upload a classroom image or recording and get a short, plain-language summary with four-character chunks ready for the tactile device flow.</p>
+            <div class="hero-actions">
+              <button class="primary-action" type="button" data-jump="image">Start with image ${icon("arrow", 15)}</button>
+              <button class="secondary-action" type="button" data-jump="audio">Start with audio</button>
+            </div>
+          </div>
+          <div class="process-panel" aria-label="Processing flow">
+            <div class="process-step"><span>01</span><strong>Capture</strong><p>Upload a page, scene, or classroom recording.</p></div>
+            <div class="process-step"><span>02</span><strong>Condense</strong><p>Keep the main learning point in simple wording.</p></div>
+            <div class="process-step"><span>03</span><strong>Output</strong><p>Preview normalized chunks for the hardware display.</p></div>
+          </div>
         </header>
 
-        <div class="feature-grid">
-          <article class="feature-card feature-lead">
-            <div class="feature-copy">
-              <h2>Accessible learning, reduced to the main idea</h2>
-              <p>Upload a worksheet, slide, scene, or voice recording. Fingertips keeps only the information a student needs most, in simple words that are easier to read tactually.</p>
-            </div>
-            <div class="quick-actions">
-              <button class="control accent" type="button" data-jump="image">Try images ${icon("arrow")}</button>
-              <button class="control" type="button" data-jump="audio">Try audio</button>
-            </div>
-          </article>
-          ${featureCard("image", "Image understanding", "Reads pages, diagrams, and scenes, then returns only the core meaning in one or two short lines.")}
-          ${featureCard("audio", "Audio simplification", "Transcribes recordings and reduces long speech into a compact takeaway instead of a long paragraph.")}
-          ${featureCard("braille", "Device-ready output", "Splits the final text into 4-character chunks so it can be sent directly to the tactile hardware flow.")}
-        </div>
+        <section class="home-grid" aria-label="Core workflows">
+          ${workflowCard("image", "Image input", "Worksheets, slides, boards, diagrams, and scenes.", "Try images", "image")}
+          ${workflowCard("audio", "Audio input", "Recorded explanations become compact learner notes.", "Try audio", "audio")}
+          ${featureCard("tactile", "Device-ready chunks", "Preview normalized four-character output for serial transport.")}
+        </section>
       </section>
     `;
   }
 
+  function workflowCard(symbol, heading, copy, action, jump) {
+    return `
+      <article class="workflow-card">
+        <div class="card-icon">${icon(symbol, 18)}</div>
+        <h2>${heading}</h2>
+        <p>${copy}</p>
+        <button type="button" data-jump="${jump}">${action} ${icon("arrow", 14)}</button>
+      </article>
+    `;
+  }
+
   function featureCard(symbol, heading, copy) {
-    return `<article class="feature-card"><div class="feature-symbol">${icon(symbol, 18)}</div><h3>${heading}</h3><p>${copy}</p></article>`;
+    return `<article class="workflow-card quiet"><div class="card-icon">${icon(symbol, 18)}</div><h2>${heading}</h2><p>${copy}</p><span class="card-note">text4 serial preview</span></article>`;
   }
 
   function imagePanel() {
     return `
-      <section class="screen" data-panel="image">
-        <div class="screen-head">
-          <h2>Image</h2>
-          <p>Capture or upload a textbook page, slide, worksheet, or diagram. Fingertips keeps only the main idea in very simple words.</p>
-        </div>
-
-        <div class="tool-card">
-          <div class="camera-box">
+      <section class="view tool-view" data-panel="image">
+        <header class="tool-header">
+          <div>
+            <span class="eyebrow">Image workflow</span>
+            <h1>Capture the page. Keep the point.</h1>
+            <p>Use a camera or upload a file, then generate a short learner-facing note.</p>
+          </div>
+        </header>
+        <div class="tool-layout">
+          <div class="media-stage">
             <video data-camera autoplay playsinline muted></video>
             <canvas data-canvas hidden></canvas>
             <img data-image-preview alt="Captured image" />
-            <div class="empty-media" data-image-empty>${icon("camera", 40)}<span>No image selected</span></div>
+            <div class="empty-state" data-image-empty>${icon("image", 38)}<span>No image selected</span></div>
           </div>
-          <div class="button-row">
-            <button class="control" type="button" data-start-camera>${icon("video")}<span data-camera-label>Start camera</span></button>
-            <button class="control" type="button" data-capture disabled>${icon("capture")}Capture</button>
-            <label class="control">${icon("upload")}Upload<input type="file" data-image-file accept="image/*" /></label>
-            <button class="control" type="button" data-clear-image disabled>Clear</button>
-            <button class="control accent push-end" type="button" data-send-image disabled>Summarize ${icon("arrow")}</button>
+          <div class="tool-actions">
+            <button class="secondary-action" type="button" data-start-camera>${icon("video")}<span data-camera-label>Start camera</span></button>
+            <button class="secondary-action" type="button" data-capture disabled>${icon("capture")}Capture</button>
+            <label class="secondary-action">${icon("upload")}Upload<input type="file" data-image-file accept="image/*" /></label>
+            <button class="secondary-action" type="button" data-clear-image disabled>Clear</button>
+            <button class="primary-action stretch" type="button" data-send-image disabled>Summarize ${icon("arrow", 15)}</button>
           </div>
         </div>
       </section>
@@ -138,23 +153,25 @@
 
   function audioPanel() {
     return `
-      <section class="screen" data-panel="audio">
-        <div class="screen-head">
-          <h2>Audio</h2>
-          <p>Record live or upload a recording. Fingertips transcribes the audio and keeps only the key takeaway.</p>
-        </div>
-
-        <div class="tool-card">
-          <div class="sound-box">
-            <div class="bars" data-wave aria-hidden="true">${"<i></i>".repeat(10)}</div>
+      <section class="view tool-view" data-panel="audio">
+        <header class="tool-header">
+          <div>
+            <span class="eyebrow">Audio workflow</span>
+            <h1>Record the explanation. Extract the takeaway.</h1>
+            <p>Record live audio or upload a file, then reduce it to the essential point.</p>
+          </div>
+        </header>
+        <div class="tool-layout">
+          <div class="audio-stage">
+            <div class="waveform" data-wave aria-hidden="true">${"<i></i>".repeat(12)}</div>
             <p data-audio-label>Press record or upload an audio file</p>
           </div>
-          <div class="button-row">
-            <button class="control record" type="button" data-record><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="12" r="6"/></svg>Record</button>
-            <button class="control" type="button" data-stop disabled><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1"/></svg>Stop</button>
-            <label class="control">${icon("upload")}Upload<input type="file" data-audio-file accept="audio/*" /></label>
-            <button class="control" type="button" data-clear-audio disabled>Clear</button>
-            <button class="control accent push-end" type="button" data-send-audio disabled>Summarize ${icon("arrow")}</button>
+          <div class="tool-actions">
+            <button class="record-action" type="button" data-record><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="12" r="6"/></svg>Record</button>
+            <button class="secondary-action" type="button" data-stop disabled><svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1"/></svg>Stop</button>
+            <label class="secondary-action">${icon("upload")}Upload<input type="file" data-audio-file accept="audio/*" /></label>
+            <button class="secondary-action" type="button" data-clear-audio disabled>Clear</button>
+            <button class="primary-action stretch" type="button" data-send-audio disabled>Summarize ${icon("arrow", 15)}</button>
           </div>
         </div>
       </section>
@@ -163,17 +180,17 @@
 
   function outputPanel() {
     return `
-      <div class="output-zone" aria-live="polite">
-        <div class="wait-card is-hidden" data-loading><span class="spinner"></span><p>Processing…</p></div>
-        <div class="answer-card is-hidden" data-result>
-          <div class="answer-head">
-            <div><h3>Essential Summary</h3><p data-result-meta></p></div>
-            <button class="copy-action" type="button" data-copy>${icon("copy")}<span>Copy</span></button>
+      <div class="result-zone" aria-live="polite">
+        <div class="loading-card hidden" data-loading><span class="spinner"></span><p>Processing...</p></div>
+        <div class="result-card hidden" data-result>
+          <div class="result-header">
+            <div><span>Essential summary</span><p data-result-meta></p></div>
+            <button class="copy-button" type="button" data-copy>${icon("copy", 14)}<span>Copy</span></button>
           </div>
-          <div class="summary-copy" data-summary></div>
-          <ol class="sentence-list is-hidden" data-sentences></ol>
+          <div class="summary-text" data-summary></div>
+          <ol class="sentence-stack hidden" data-sentences></ol>
         </div>
-        <div class="problem-card is-hidden" data-error>${icon("alert", 16)}<span data-error-copy></span></div>
+        <div class="error-card hidden" data-error>${icon("alert", 16)}<span data-error-copy></span></div>
       </div>
     `;
   }
@@ -212,21 +229,19 @@
 
   function setMode(mode) {
     root.querySelectorAll("[data-mode]").forEach(button => {
-      button.classList.toggle("selected", button.dataset.mode === mode);
+      button.classList.toggle("active", button.dataset.mode === mode);
     });
     root.querySelectorAll("[data-panel]").forEach(panel => {
-      panel.classList.toggle("showing", panel.dataset.panel === mode);
+      panel.classList.toggle("active", panel.dataset.panel === mode);
     });
-    if (mode !== "image") {
-      stopCamera();
-    }
+    if (mode !== "image") stopCamera();
     hideOutput();
   }
 
-  function setApiBadge(kind, label, copy) {
-    dom.apiPill.className = `api-pill ${kind}`;
+  function setApiBadge(kind, label, message) {
+    dom.apiPill.className = `api-state ${kind}`;
     dom.apiLabel.textContent = label;
-    dom.apiCopy.textContent = copy;
+    dom.apiCopy.textContent = message;
   }
 
   async function refreshHealth() {
@@ -235,9 +250,9 @@
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       state.apiHealth = await response.json();
       if (state.apiHealth.demo_mode) {
-        setApiBadge("demo", "Demo API", "Demo fallbacks active. UI runs without every dependency.");
+        setApiBadge("demo", "Demo API", "Demo fallbacks active.");
       } else {
-        setApiBadge("live", "Live API", "Live backend connected.");
+        setApiBadge("live", "Live API", "Backend connected.");
       }
     } catch {
       state.apiHealth = null;
@@ -247,37 +262,35 @@
 
   async function requestJson(path, options) {
     const response = await fetch(`${apiBase}${path}`, options);
-    const body = await response.text();
+    const raw = await response.text();
     let data;
     try {
-      data = body ? JSON.parse(body) : {};
+      data = raw ? JSON.parse(raw) : {};
     } catch {
-      data = { detail: body || response.statusText };
+      data = { detail: raw || response.statusText };
     }
-    if (!response.ok) {
-      throw new Error(data.detail || response.statusText);
-    }
+    if (!response.ok) throw new Error(data.detail || response.statusText);
     return data;
   }
 
   function showLoading() {
-    dom.loading.classList.remove("is-hidden");
-    dom.result.classList.add("is-hidden");
-    dom.error.classList.add("is-hidden");
+    dom.loading.classList.remove("hidden");
+    dom.result.classList.add("hidden");
+    dom.error.classList.add("hidden");
   }
 
   function hideOutput() {
-    dom.loading.classList.add("is-hidden");
-    dom.result.classList.add("is-hidden");
-    dom.error.classList.add("is-hidden");
-    dom.sentences.classList.add("is-hidden");
-    dom.summary.classList.remove("is-hidden");
+    dom.loading.classList.add("hidden");
+    dom.result.classList.add("hidden");
+    dom.error.classList.add("hidden");
+    dom.sentences.classList.add("hidden");
+    dom.summary.classList.remove("hidden");
   }
 
   function showProblem(message) {
-    dom.loading.classList.add("is-hidden");
+    dom.loading.classList.add("hidden");
     dom.errorCopy.textContent = message;
-    dom.error.classList.remove("is-hidden");
+    dom.error.classList.remove("hidden");
   }
 
   function showAnswer(data) {
@@ -286,7 +299,7 @@
       ? data.simple_sentences.filter(Boolean)
       : text.split(/(?<=[.!?])\s+/).map(part => part.trim()).filter(Boolean);
 
-    dom.loading.classList.add("is-hidden");
+    dom.loading.classList.add("hidden");
     dom.summary.textContent = text;
     dom.resultMeta.textContent = `${data.mode === "image" ? "From image" : "From audio"} · essential only${state.apiHealth?.demo_mode ? " · demo mode" : ""}`;
     dom.sentences.replaceChildren();
@@ -299,14 +312,14 @@
         item.querySelector("p").textContent = sentence;
         dom.sentences.appendChild(item);
       });
-      dom.summary.classList.add("is-hidden");
-      dom.sentences.classList.remove("is-hidden");
+      dom.summary.classList.add("hidden");
+      dom.sentences.classList.remove("hidden");
     } else {
-      dom.summary.classList.remove("is-hidden");
-      dom.sentences.classList.add("is-hidden");
+      dom.summary.classList.remove("hidden");
+      dom.sentences.classList.add("hidden");
     }
 
-    dom.result.classList.remove("is-hidden");
+    dom.result.classList.remove("hidden");
   }
 
   function revokeImageUrl() {
@@ -327,7 +340,7 @@
   function showImageSource(which) {
     dom.camera.classList.toggle("active", which === "camera");
     dom.imagePreview.classList.toggle("active", which === "preview");
-    dom.imageEmpty.classList.toggle("is-hidden", which !== "empty");
+    dom.imageEmpty.classList.toggle("hidden", which !== "empty");
   }
 
   function resetImage() {
@@ -432,9 +445,7 @@
 
   async function startRecording() {
     try {
-      if (!window.MediaRecorder) {
-        throw new Error("This browser does not support in-browser audio recording.");
-      }
+      if (!window.MediaRecorder) throw new Error("This browser does not support in-browser audio recording.");
       hideOutput();
       state.audioBlob = null;
       state.audioParts = [];
@@ -455,7 +466,7 @@
       state.recorder.start(250);
       dom.wave.classList.remove("ready");
       dom.wave.classList.add("active");
-      dom.audioLabel.textContent = "Recording…";
+      dom.audioLabel.textContent = "Recording...";
       dom.record.disabled = true;
       dom.stop.disabled = false;
       dom.clearAudio.disabled = false;
@@ -466,9 +477,7 @@
   }
 
   function stopRecording() {
-    if (state.recorder?.state === "recording") {
-      state.recorder.stop();
-    }
+    if (state.recorder?.state === "recording") state.recorder.stop();
     dom.stop.disabled = true;
   }
 
@@ -479,7 +488,7 @@
     form.append("file", state.audioBlob, state.audioName);
     showLoading();
     dom.sendAudio.disabled = true;
-    dom.audioLabel.textContent = "Processing audio…";
+    dom.audioLabel.textContent = "Processing audio...";
     try {
       showAnswer(await requestJson("/lecture", { method: "POST", body: form }));
     } catch (error) {
