@@ -34,17 +34,17 @@ def parse_csv(value: str | None, default: tuple[str, ...]) -> tuple[str, ...]:
 
 @dataclass(frozen=True)
 class Settings:
-    mock_claude: bool
+    mock_openai: bool
     mock_transcribe: bool
     enable_device_io: bool
     device_format: str
     serial_port: str
     serial_baud: int
     serial_chunk_delay_ms: int
-    anthropic_api_key: str | None
+    openai_api_key: str | None
     vision_model: str
     summary_model: str
-    whisper_model: str
+    transcribe_model: str
     cors_origins: tuple[str, ...]
     max_image_bytes: int
     max_audio_bytes: int
@@ -56,20 +56,20 @@ def get_settings() -> Settings:
         device_format = "text4"
 
     default_baud = 115200 if device_format == "text4" else 9600
-    default_model = os.getenv("ANTHROPIC_MODEL", "claude-opus-4-8")
+    default_model = os.getenv("OPENAI_MODEL", "gpt-5.5")
 
     return Settings(
-        mock_claude=parse_bool(os.getenv("MOCK_CLAUDE"), True),
+        mock_openai=parse_bool(os.getenv("MOCK_OPENAI"), True),
         mock_transcribe=parse_bool(os.getenv("MOCK_TRANSCRIBE"), True),
         enable_device_io=parse_bool(os.getenv("ENABLE_DEVICE_IO"), False),
         device_format=device_format,
         serial_port=os.getenv("SERIAL_PORT", "/dev/cu.usbmodem1101"),
         serial_baud=parse_int(os.getenv("SERIAL_BAUD"), default_baud),
         serial_chunk_delay_ms=parse_int(os.getenv("SERIAL_CHUNK_DELAY_MS"), 0),
-        anthropic_api_key=os.getenv("ANTHROPIC_API_KEY"),
-        vision_model=os.getenv("ANTHROPIC_VISION_MODEL", default_model),
-        summary_model=os.getenv("ANTHROPIC_SUMMARY_MODEL", default_model),
-        whisper_model=os.getenv("WHISPER_MODEL", "base"),
+        openai_api_key=os.getenv("OPENAI_API_KEY"),
+        vision_model=os.getenv("OPENAI_VISION_MODEL", default_model),
+        summary_model=os.getenv("OPENAI_SUMMARY_MODEL", default_model),
+        transcribe_model=os.getenv("OPENAI_TRANSCRIBE_MODEL", "gpt-4o-transcribe"),
         cors_origins=parse_csv(os.getenv("CORS_ORIGINS"), ("*",)),
         max_image_bytes=parse_int(os.getenv("MAX_IMAGE_BYTES"), 10 * 1024 * 1024),
         max_audio_bytes=parse_int(os.getenv("MAX_AUDIO_BYTES"), 50 * 1024 * 1024),

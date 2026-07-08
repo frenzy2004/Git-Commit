@@ -25,7 +25,7 @@ The backend keeps each boundary in a separate module:
 - `uploads.py`: MIME and file-size policy.
 - `pipeline.py`: image/audio processing flow.
 - `vision.py`: image model adapter.
-- `audio.py`: local speech-to-text adapter.
+- `audio.py`: OpenAI speech-to-text adapter.
 - `summarizer.py`: transcript compression adapter.
 - `text_utils.py`: sentence shaping helpers.
 - `serial_out.py`: device payload and serial output.

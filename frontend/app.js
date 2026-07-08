@@ -8,6 +8,7 @@
     ? `${window.location.protocol}//${window.location.hostname}:8000`
     : "http://localhost:8000";
   const apiBase = (apiFromQuery || apiFromStorage || pageHostApi).replace(/\/$/, "");
+  const demoImagePath = "assets/demo-fig.png";
 
   if (apiFromQuery) {
     window.localStorage.setItem("fingertips.api", apiBase);
@@ -88,7 +89,7 @@
             <h1>Turn lessons into tactile-ready notes.</h1>
             <p>Upload a classroom image or recording and get a short, plain-language summary with four-character chunks ready for the tactile device flow.</p>
             <div class="hero-actions">
-              <button class="primary-action" type="button" data-jump="image">Start with image ${icon("arrow", 15)}</button>
+              <button class="primary-action" type="button" data-jump="image" data-demo-image>Start with image ${icon("arrow", 15)}</button>
               <button class="secondary-action" type="button" data-jump="audio">Start with audio</button>
             </div>
           </div>
@@ -109,12 +110,13 @@
   }
 
   function workflowCard(symbol, heading, copy, action, jump) {
+    const demoAttribute = jump === "image" ? " data-demo-image" : "";
     return `
       <article class="workflow-card">
         <div class="card-icon">${icon(symbol, 18)}</div>
         <h2>${heading}</h2>
         <p>${copy}</p>
-        <button type="button" data-jump="${jump}">${action} ${icon("arrow", 14)}</button>
+        <button type="button" data-jump="${jump}"${demoAttribute}>${action} ${icon("arrow", 14)}</button>
       </article>
     `;
   }
@@ -375,6 +377,18 @@
     showImageSource("preview");
   }
 
+  async function loadDemoImage() {
+    try {
+      hideOutput();
+      stopCamera();
+      const response = await fetch(demoImagePath, { cache: "force-cache" });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      acceptImage(await response.blob());
+    } catch (error) {
+      showProblem(`Could not load the demo image: ${error.message}`);
+    }
+  }
+
   async function beginCamera() {
     try {
       hideOutput();
@@ -526,7 +540,10 @@
     const mode = event.target.closest("[data-mode]");
     const jump = event.target.closest("[data-jump]");
     if (mode) setMode(mode.dataset.mode);
-    if (jump) setMode(jump.dataset.jump);
+    if (jump) {
+      setMode(jump.dataset.jump);
+      if (jump.hasAttribute("data-demo-image")) void loadDemoImage();
+    }
   });
 
   root.querySelector("[data-start-camera]").addEventListener("click", beginCamera);

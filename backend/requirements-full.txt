@@ -2,8 +2,5 @@
 # Keep this separate so the default demo install stays light.
 -r requirements.txt
 
-# Claude client for image understanding and transcript compression.
-anthropic>=0.69.0,<1.0.0
-
-# Local speech-to-text engine used when MOCK_TRANSCRIBE=false.
-faster-whisper>=1.0.3,<2.0.0
+# OpenAI client for image understanding, transcript compression, and speech-to-text.
+openai>=1.99.0,<3.0.0

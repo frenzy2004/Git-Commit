@@ -9,7 +9,7 @@ from backend.main import create_app
 
 @pytest.fixture()
 def client(monkeypatch):
-    monkeypatch.setenv("MOCK_CLAUDE", "true")
+    monkeypatch.setenv("MOCK_OPENAI", "true")
     monkeypatch.setenv("MOCK_TRANSCRIBE", "true")
     monkeypatch.setenv("ENABLE_DEVICE_IO", "false")
     monkeypatch.setenv("DEVICE_FORMAT", "text4")
@@ -64,7 +64,7 @@ def test_lecture_endpoint_keeps_frontend_contract(client):
 
 
 def test_rejects_oversized_upload_before_pipeline(monkeypatch):
-    monkeypatch.setenv("MOCK_CLAUDE", "true")
+    monkeypatch.setenv("MOCK_OPENAI", "true")
     monkeypatch.setenv("MOCK_TRANSCRIBE", "true")
     monkeypatch.setenv("MAX_IMAGE_BYTES", "4")
 

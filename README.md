@@ -10,8 +10,7 @@ Image or audio input -> concise learning note -> text4 chunks -> optional serial
 
 - Static browser app for image capture, image upload, audio recording, and audio upload.
 - FastAPI backend with stable demo-mode responses.
-- Optional Claude adapters for image understanding and transcript summarization.
-- Optional local transcription through `faster-whisper`.
+- Optional OpenAI adapters for image understanding, transcript summarization, and speech-to-text.
 - Four-character text chunking for tactile hardware playback.
 - ESP32 firmware for motor-position display experiments.
 - Tests, examples, helper scripts, and CI workflow included.
@@ -84,7 +83,7 @@ Copy `.env.example` to `backend/.env` and adjust values as needed.
 Demo defaults:
 
 ```env
-MOCK_CLAUDE=true
+MOCK_OPENAI=true
 MOCK_TRANSCRIBE=true
 ENABLE_DEVICE_IO=false
 DEVICE_FORMAT=text4
@@ -99,9 +98,13 @@ pip install -r backend/requirements-full.txt
 Then set:
 
 ```env
-ANTHROPIC_API_KEY=your_api_key_here
-MOCK_CLAUDE=false
+OPENAI_API_KEY=your_api_key_here
+MOCK_OPENAI=false
 MOCK_TRANSCRIBE=false
+OPENAI_MODEL=gpt-5.5
+OPENAI_VISION_MODEL=gpt-5.5
+OPENAI_SUMMARY_MODEL=gpt-5.5
+OPENAI_TRANSCRIBE_MODEL=gpt-4o-transcribe
 ENABLE_DEVICE_IO=true
 SERIAL_PORT=your_serial_port_here
 ```
@@ -161,4 +164,4 @@ Current test coverage includes:
 
 ## Project Status
 
-Fingertips is a prototype meant for demos, learning, and hardware iteration. Keep demo mode working by default, and enable live integrations only when API credentials, local transcription dependencies, and supervised hardware are ready.
+Fingertips is a prototype meant for demos, learning, and hardware iteration. Keep demo mode working by default, and enable live integrations only when API credentials and supervised hardware are ready.

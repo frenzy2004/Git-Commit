@@ -27,7 +27,7 @@ http://127.0.0.1:4173
 1. Open the Audio screen.
 2. Record or upload audio.
 3. Select `Summarize`.
-4. Explain that demo mode can run without a model download.
+4. Explain that demo mode can run without external model calls.
 
 ## 4. Hardware Talking Points
 

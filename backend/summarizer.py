@@ -3,9 +3,9 @@ from __future__ import annotations
 from .config import Settings, get_settings
 
 try:
-    from anthropic import Anthropic as AnthropicClient
-except ImportError:  # pragma: no cover - cloud summarization is optional
-    AnthropicClient = None
+    from openai import OpenAI as OpenAIClient
+except ImportError:  # pragma: no cover - live model calls are optional
+    OpenAIClient = None
 
 
 PROMPT_PARTS = {
@@ -23,48 +23,36 @@ PROMPT_PARTS = {
 }
 
 TRANSCRIPT_PREFIX = "Find the key point in this classroom transcript and rewrite it for tactile reading:\n\n"
-PLACEHOLDER_SUMMARY = "This lesson has one main point. Disable MOCK_CLAUDE to summarize real audio."
+PLACEHOLDER_SUMMARY = "This demo recording has one main point. Turn off MOCK_OPENAI to summarize real audio."
 
 
 def summary_available(settings: Settings | None = None) -> bool:
     active = settings or get_settings()
-    return active.mock_claude or AnthropicClient is not None
+    return active.mock_openai or OpenAIClient is not None
 
 
 def _system_text() -> str:
     return " ".join(PROMPT_PARTS.values())
 
 
-def _anthropic(settings: Settings):
-    if AnthropicClient is None:
-        raise RuntimeError("anthropic is not installed")
-    if settings.anthropic_api_key:
-        return AnthropicClient(api_key=settings.anthropic_api_key)
-    return AnthropicClient()
-
-
-def _message_text(message) -> str:
-    parts: list[str] = []
-    for item in getattr(message, "content", []):
-        if getattr(item, "type", None) == "text":
-            parts.append(item.text)
-    return "".join(parts).strip()
+def _client(settings: Settings):
+    if OpenAIClient is None:
+        raise RuntimeError("openai is not installed")
+    if settings.openai_api_key:
+        return OpenAIClient(api_key=settings.openai_api_key)
+    return OpenAIClient()
 
 
 def summarize_transcript(transcript: str, settings: Settings | None = None) -> str:
     active = settings or get_settings()
-    if active.mock_claude:
+    if active.mock_openai:
         return PLACEHOLDER_SUMMARY
 
-    response = _anthropic(active).messages.create(
+    response = _client(active).responses.create(
         model=active.summary_model,
-        max_tokens=512,
-        system=_system_text(),
-        messages=[
-            {
-                "role": "user",
-                "content": TRANSCRIPT_PREFIX + transcript,
-            }
-        ],
+        instructions=_system_text(),
+        input=TRANSCRIPT_PREFIX + transcript,
+        max_output_tokens=512,
+        text={"verbosity": "low"},
     )
-    return _message_text(response)
+    return response.output_text.strip()

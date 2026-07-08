@@ -19,7 +19,7 @@ from .vision import vision_available
 def health_payload(settings: Settings, audio_ready: bool) -> dict:
     return {
         "status": "ok",
-        "demo_mode": settings.mock_claude or settings.mock_transcribe,
+        "demo_mode": settings.mock_openai or settings.mock_transcribe,
         "device_transport": {
             "enabled": settings.enable_device_io,
             "mode": "serial" if settings.enable_device_io else "preview-only",

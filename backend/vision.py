@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 import base64
-import importlib
-import importlib.util
 
 from .config import Settings, get_settings
+
+try:
+    from openai import OpenAI as OpenAIClient
+except ImportError:  # pragma: no cover - live model calls are optional
+    OpenAIClient = None
 
 
 VISION_GUIDE = (
@@ -23,44 +26,25 @@ VISION_ASK = (
     "Use one sentence when possible and never more than two short sentences."
 )
 
-DEMO_IMAGE_NOTE = "This picture has one important idea. Turn off MOCK_CLAUDE to analyze real images."
-
-
-def _anthropic_installed() -> bool:
-    return importlib.util.find_spec("anthropic") is not None
+DEMO_IMAGE_NOTE = "The demo image shows a fig cut open so the seeds inside are visible."
 
 
 def vision_available(settings: Settings | None = None) -> bool:
     active = settings or get_settings()
-    return active.mock_claude or _anthropic_installed()
+    return active.mock_openai or OpenAIClient is not None
 
 
 def _client(settings: Settings):
-    if not _anthropic_installed():
-        raise RuntimeError("anthropic is not installed")
-    client_type = importlib.import_module("anthropic").Anthropic
-    if settings.anthropic_api_key:
-        return client_type(api_key=settings.anthropic_api_key)
-    return client_type()
+    if OpenAIClient is None:
+        raise RuntimeError("openai is not installed")
+    if settings.openai_api_key:
+        return OpenAIClient(api_key=settings.openai_api_key)
+    return OpenAIClient()
 
 
-def _encoded_source(image_bytes: bytes, media_type: str) -> dict:
-    return {
-        "type": "image",
-        "source": {
-            "type": "base64",
-            "media_type": media_type,
-            "data": base64.b64encode(image_bytes).decode("ascii"),
-        },
-    }
-
-
-def _plain_text(message) -> str:
-    output = []
-    for block in getattr(message, "content", []):
-        if getattr(block, "type", None) == "text":
-            output.append(block.text)
-    return "".join(output).strip()
+def _image_data_url(image_bytes: bytes, media_type: str) -> str:
+    encoded = base64.b64encode(image_bytes).decode("ascii")
+    return f"data:{media_type};base64,{encoded}"
 
 
 def summarize_image(
@@ -69,21 +53,22 @@ def summarize_image(
     settings: Settings | None = None,
 ) -> str:
     active = settings or get_settings()
-    if active.mock_claude:
+    if active.mock_openai:
         return DEMO_IMAGE_NOTE
 
-    result = _client(active).messages.create(
+    response = _client(active).responses.create(
         model=active.vision_model,
-        max_tokens=512,
-        system=VISION_GUIDE,
-        messages=[
+        instructions=VISION_GUIDE,
+        input=[
             {
                 "role": "user",
                 "content": [
-                    _encoded_source(image_bytes, media_type),
-                    {"type": "text", "text": VISION_ASK},
+                    {"type": "input_text", "text": VISION_ASK},
+                    {"type": "input_image", "image_url": _image_data_url(image_bytes, media_type)},
                 ],
             }
         ],
+        max_output_tokens=512,
+        text={"verbosity": "low"},
     )
-    return _plain_text(result)
+    return response.output_text.strip()
