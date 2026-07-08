@@ -3,7 +3,8 @@
   const query = new URLSearchParams(window.location.search);
   const apiFromQuery = query.get("api");
   const apiFromStorage = window.localStorage.getItem("fingertips.api");
-  const pageHostApi = window.location.protocol.startsWith("http") && window.location.hostname
+  const localHosts = new Set(["localhost", "127.0.0.1", "::1"]);
+  const pageHostApi = window.location.protocol.startsWith("http") && localHosts.has(window.location.hostname)
     ? `${window.location.protocol}//${window.location.hostname}:8000`
     : "http://localhost:8000";
   const apiBase = (apiFromQuery || apiFromStorage || pageHostApi).replace(/\/$/, "");
@@ -245,8 +246,13 @@
   }
 
   async function refreshHealth() {
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 2500);
     try {
-      const response = await fetch(`${apiBase}/health`, { headers: { Accept: "application/json" } });
+      const response = await fetch(`${apiBase}/health`, {
+        headers: { Accept: "application/json" },
+        signal: controller.signal,
+      });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       state.apiHealth = await response.json();
       if (state.apiHealth.demo_mode) {
@@ -257,6 +263,8 @@
     } catch {
       state.apiHealth = null;
       setApiBadge("offline", "Backend offline", `Could not reach ${apiBase}.`);
+    } finally {
+      window.clearTimeout(timeout);
     }
   }
 
