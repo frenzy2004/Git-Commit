@@ -67,3 +67,71 @@
         <main class="stage">
           ${homePanel()}
           ${imagePanel()}
+          ${audioPanel()}
+          ${outputPanel()}
+        </main>
+      </div>
+    `;
+  }
+
+  function modeButton(mode, label, symbol, selected = false) {
+    return `<button class="mode-choice${selected ? " selected" : ""}" type="button" data-mode="${mode}">${icon(symbol, 18)}<span>${label}</span></button>`;
+  }
+
+  function homePanel() {
+    return `
+      <section class="screen home-screen showing" data-panel="home">
+        <header class="home-hero">
+          <div class="home-title">${brailleMark("large")}<h1>Fingertips</h1></div>
+          <p>Fingertips turns classroom images and audio into short, essential explanations for deaf-blind learners, then prepares the text for tactile playback on a future braille device.</p>
+        </header>
+
+        <div class="feature-grid">
+          <article class="feature-card feature-lead">
+            <div class="feature-copy">
+              <h2>Accessible learning, reduced to the main idea</h2>
+              <p>Upload a worksheet, slide, scene, or voice recording. Fingertips keeps only the information a student needs most, in simple words that are easier to read tactually.</p>
+            </div>
+            <div class="quick-actions">
+              <button class="control accent" type="button" data-jump="image">Try images ${icon("arrow")}</button>
+              <button class="control" type="button" data-jump="audio">Try audio</button>
+            </div>
+          </article>
+          ${featureCard("image", "Image understanding", "Reads pages, diagrams, and scenes, then returns only the core meaning in one or two short lines.")}
+          ${featureCard("audio", "Audio simplification", "Transcribes recordings and reduces long speech into a compact takeaway instead of a long paragraph.")}
+          ${featureCard("braille", "Device-ready output", "Splits the final text into 4-character chunks so it can be sent directly to the tactile hardware flow.")}
+        </div>
+      </section>
+    `;
+  }
+
+  function featureCard(symbol, heading, copy) {
+    return `<article class="feature-card"><div class="feature-symbol">${icon(symbol, 18)}</div><h3>${heading}</h3><p>${copy}</p></article>`;
+  }
+
+  function imagePanel() {
+    return `
+      <section class="screen" data-panel="image">
+        <div class="screen-head">
+          <h2>Image</h2>
+          <p>Capture or upload a textbook page, slide, worksheet, or diagram. Fingertips keeps only the main idea in very simple words.</p>
+        </div>
+
+        <div class="tool-card">
+          <div class="camera-box">
+            <video data-camera autoplay playsinline muted></video>
+            <canvas data-canvas hidden></canvas>
+            <img data-image-preview alt="Captured image" />
+            <div class="empty-media" data-image-empty>${icon("camera", 40)}<span>No image selected</span></div>
+          </div>
+          <div class="button-row">
+            <button class="control" type="button" data-start-camera>${icon("video")}<span data-camera-label>Start camera</span></button>
+            <button class="control" type="button" data-capture disabled>${icon("capture")}Capture</button>
+            <label class="control">${icon("upload")}Upload<input type="file" data-image-file accept="image/*" /></label>
+            <button class="control" type="button" data-clear-image disabled>Clear</button>
+            <button class="control accent push-end" type="button" data-send-image disabled>Summarize ${icon("arrow")}</button>
+          </div>
+        </div>
+      </section>
+    `;
+  }
