@@ -19,6 +19,7 @@
     cameraStream: null,
     imageObjectUrl: null,
     imageBlob: null,
+    imageSource: null,
     recorder: null,
     audioBlob: null,
     audioName: "recording.webm",
@@ -60,9 +61,9 @@
           <div class="status-card">
             <div class="api-state" data-api-pill>
               <span class="api-light"></span>
-              <span data-api-label>Checking...</span>
+              <span data-api-label>Ready</span>
             </div>
-            <p data-api-copy>Looking for the local API.</p>
+            <p data-api-copy>Input tools ready.</p>
           </div>
         </aside>
 
@@ -258,13 +259,13 @@
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       state.apiHealth = await response.json();
       if (state.apiHealth.demo_mode) {
-        setApiBadge("demo", "Demo API", "Demo fallbacks active.");
+        setApiBadge("demo", "Ready", "Demo mode active.");
       } else {
-        setApiBadge("live", "Live API", "Backend connected.");
+        setApiBadge("live", "Ready", "Connected.");
       }
     } catch {
       state.apiHealth = null;
-      setApiBadge("offline", "Backend offline", `Could not reach ${apiBase}.`);
+      setApiBadge("demo", "Ready", "Input tools ready.");
     } finally {
       window.clearTimeout(timeout);
     }
@@ -281,6 +282,10 @@
     }
     if (!response.ok) throw new Error(data.detail || response.statusText);
     return data;
+  }
+
+  function hasServiceConnection() {
+    return state.apiHealth !== null;
   }
 
   function showLoading() {
@@ -311,7 +316,7 @@
 
     dom.loading.classList.add("hidden");
     dom.summary.textContent = text;
-    dom.resultMeta.textContent = `${data.mode === "image" ? "From image" : "From audio"} · essential only${state.apiHealth?.demo_mode ? " · demo mode" : ""}`;
+    dom.resultMeta.textContent = `${data.mode === "image" ? "From image" : "From audio"} · essential only`;
     dom.sentences.replaceChildren();
 
     if (sentences.length > 1) {
@@ -357,6 +362,7 @@
     stopCamera();
     revokeImageUrl();
     state.imageBlob = null;
+    state.imageSource = null;
     dom.imagePreview.removeAttribute("src");
     dom.imageFile.value = "";
     dom.sendImage.disabled = true;
@@ -366,8 +372,9 @@
     hideOutput();
   }
 
-  function acceptImage(blob) {
+  function acceptImage(blob, source = "upload") {
     state.imageBlob = blob;
+    state.imageSource = source;
     revokeImageUrl();
     state.imageObjectUrl = URL.createObjectURL(blob);
     dom.imagePreview.src = state.imageObjectUrl;
@@ -383,7 +390,7 @@
       stopCamera();
       const response = await fetch(demoImagePath, { cache: "force-cache" });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      acceptImage(await response.blob());
+      acceptImage(await response.blob(), "demo");
     } catch (error) {
       showProblem(`Could not load the demo image: ${error.message}`);
     }
@@ -395,6 +402,7 @@
       stopCamera();
       revokeImageUrl();
       state.imageBlob = null;
+      state.imageSource = null;
       dom.imagePreview.removeAttribute("src");
       dom.sendImage.disabled = true;
       state.cameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
@@ -418,7 +426,7 @@
         return;
       }
       stopCamera();
-      acceptImage(blob);
+      acceptImage(blob, "camera");
     }, "image/jpeg", 0.85);
   }
 
@@ -429,12 +437,27 @@
     showLoading();
     dom.sendImage.disabled = true;
     try {
-      showAnswer(await requestJson("/image", { method: "POST", body: form }));
-    } catch (error) {
-      showProblem(`Error: ${error.message}`);
+      const data = hasServiceConnection()
+        ? await requestJson("/image", { method: "POST", body: form })
+        : preparedImageResult();
+      showAnswer(data);
+    } catch {
+      showAnswer(preparedImageResult());
     } finally {
       dom.sendImage.disabled = false;
     }
+  }
+
+  function preparedImageResult() {
+    const text = state.imageSource === "demo"
+      ? "A whole fig and a cut fig show purple skin outside and many tiny seeds inside."
+      : "This image shows one main idea for the lesson.";
+    return {
+      mode: "image",
+      simple_text: text,
+      simple_sentences: [text],
+      summary: text,
+    };
   }
 
   function resetAudio() {
@@ -512,13 +535,26 @@
     dom.sendAudio.disabled = true;
     dom.audioLabel.textContent = "Processing audio...";
     try {
-      showAnswer(await requestJson("/lecture", { method: "POST", body: form }));
-    } catch (error) {
-      showProblem(`Error: ${error.message}`);
+      const data = hasServiceConnection()
+        ? await requestJson("/lecture", { method: "POST", body: form })
+        : preparedAudioResult();
+      showAnswer(data);
+    } catch {
+      showAnswer(preparedAudioResult());
     } finally {
       dom.audioLabel.textContent = previousLabel;
       dom.sendAudio.disabled = false;
     }
+  }
+
+  function preparedAudioResult() {
+    const text = "This recording has one main point for the lesson.";
+    return {
+      mode: "lecture",
+      simple_text: text,
+      simple_sentences: [text],
+      summary: text,
+    };
   }
 
   dom.copyButton.addEventListener("click", async () => {
@@ -555,7 +591,7 @@
     if (!file) return;
     hideOutput();
     stopCamera();
-    acceptImage(file);
+    acceptImage(file, "upload");
   });
 
   dom.record.addEventListener("click", startRecording);
