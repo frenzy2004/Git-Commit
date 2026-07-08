@@ -149,3 +149,25 @@ Supported common inputs include WebM, WAV, MP3, OGG, MP4, M4A, and AAC.
 
 ### Response Shape
 
+Both processing endpoints return:
+
+```json
+{
+  "mode": "image",
+  "simple_text": "Short learner-facing text.",
+  "simple_sentences": ["Short learner-facing text."],
+  "summary": "Short learner-facing text.",
+  "cell_count": 12,
+  "braille_preview": "hex preview or text chunk preview",
+  "device": {
+    "transport": "serial",
+    "format": "text4",
+    "enabled": false,
+    "sent": false,
+    "chunks": ["shor", "t le"]
+  },
+  "serial": {}
+}
+```
+
+`serial` is kept as an alias for older UI integrations. New code should prefer `device`.
