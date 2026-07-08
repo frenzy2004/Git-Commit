@@ -8,6 +8,8 @@ Built for **Codex for Healthcare: From Prototype to Production** (A*STAR x IMDA 
 
 **Track 5: Care for Older Adults** - safety, independence, and social support.
 
+**Implementation credit:** this codebase was built end-to-end with **OpenAI Codex** as the primary coding agent, covering the browser UI, FastAPI backend, OpenAI model adapters, device payload pipeline, serial protocol, hardware firmware, tests, documentation, GitHub setup, and Vercel deployment workflow.
+
 ```text
 Image or audio input -> essential learning note -> text4 chunks -> optional serial output
 ```
@@ -40,28 +42,127 @@ The current hardware protocol emits four-character chunks for a tactile device f
 ## System Architecture
 
 ```text
-Browser UI  ->  FastAPI backend  ->  Optional ESP32 serial device
+Browser UI  ->  FastAPI backend  ->  Text shaping  ->  Device payload  ->  Optional serial hardware
 
 frontend/
-  camera, image upload, mic recording, audio upload
+  app.js
+    - route-free SPA state
+    - camera stream + canvas capture
+    - file upload Blob handling
+    - MediaRecorder audio capture
+    - multipart API calls
+    - result rendering and copy flow
 
 backend/
-  /health
-  /image
-  /lecture
+  main.py
+    GET  /health
+    POST /image
+    POST /lecture
+  uploads.py
+    MIME validation + bounded reads
+  pipeline.py
+    mode-specific orchestration + shared response contract
 
-pipeline/
-  image/audio input
-  -> OpenAI model adapters
-  -> essential text shaping
-  -> text4 device payload
-  -> optional serial transport
+model adapters/
+  vision.py
+    image bytes -> OpenAI Responses API -> one tactile-ready note
+  audio.py
+    audio bytes -> OpenAI transcription -> transcript
+  summarizer.py
+    transcript -> OpenAI Responses API -> key point
+
+text + device/
+  text_utils.py
+    normalize, trim, and split learner-facing text
+  serial_out.py
+    text4 chunking, preview payload, optional serial write
+  braille.py
+    6-dot cell conversion path for braille-mode payloads
 
 hardware/
   ESP32 firmware for motor-position display experiments
 ```
 
-Design rule: the hardware stays simple. The intelligence lives in software so model, prompt, and device-protocol improvements can happen without redesigning the physical display.
+Design rule: the hardware stays simple. The intelligence lives in software so model, prompt, text-shaping, and device-protocol improvements can happen without redesigning the physical display.
+
+## Technical Implementation
+
+Fingertips is intentionally split into small runtime boundaries so each layer can be tested or replaced independently.
+
+### Frontend Runtime
+
+- Static HTML/CSS/JS with no build step required.
+- `app.js` renders the full interface from a single root node and keeps UI state in a small in-memory state object.
+- Camera input uses `navigator.mediaDevices.getUserMedia`, draws to a hidden `<canvas>`, then converts the frame to a JPEG `Blob`.
+- Audio recording uses `MediaRecorder`, stores chunks, and sends a generated WebM `Blob`.
+- Upload inputs preserve the browser `File` object and send it as multipart form data.
+- The demo image path uses a committed static asset at `frontend/assets/demo-fig.png`.
+- Result rendering consumes only the stable API contract: `mode`, `simple_text`, `simple_sentences`, `summary`, and `device`.
+
+### Backend Runtime
+
+- FastAPI app factory in `backend/main.py` keeps app creation testable.
+- Upload policy is isolated in `uploads.py`, including MIME validation and maximum byte limits.
+- `pipeline.py` is the orchestration boundary: it calls the selected input adapter, shapes text, builds device payloads, and returns one response shape for both endpoints.
+- `config.py` reads `.env` once and normalizes booleans, integers, CSV origins, model names, device settings, serial settings, and upload limits.
+- CORS is configurable through `CORS_ORIGINS` and defaults to permissive demo behavior.
+
+### OpenAI Model Layer
+
+- `vision.py` sends image data as a base64 data URL through the OpenAI Responses API.
+- `audio.py` sends uploaded audio bytes to the OpenAI audio transcription endpoint.
+- `summarizer.py` sends transcripts through the OpenAI Responses API with a tactile-reading prompt.
+- Model IDs are environment-driven:
+  - `OPENAI_MODEL`
+  - `OPENAI_VISION_MODEL`
+  - `OPENAI_SUMMARY_MODEL`
+  - `OPENAI_TRANSCRIBE_MODEL`
+- Current defaults use `gpt-5.5` for image and summary reasoning, and `gpt-4o-transcribe` for speech-to-text.
+
+### Text And Device Pipeline
+
+- `essentialize_text()` removes noisy phrasing and keeps output short enough for tactile reading.
+- `split_simple_sentences()` provides UI-friendly sentence cards while preserving the full summary.
+- `prepare_device_payload()` normalizes text, chunks it, previews it, and optionally sends it to hardware.
+- `DEVICE_FORMAT=text4` emits four-character chunks for the current tactile hardware flow.
+- `DEVICE_FORMAT=braille` keeps the 6-dot cell conversion path available for braille-oriented hardware.
+- Serial output is disabled by default and only writes when `ENABLE_DEVICE_IO=true`.
+
+### Response Contract
+
+All processing endpoints return the same core shape:
+
+```json
+{
+  "mode": "image",
+  "simple_text": "Short learner-facing note.",
+  "simple_sentences": ["Short learner-facing note."],
+  "summary": "Short learner-facing note.",
+  "cell_count": 28,
+  "braille_preview": "shor | t le",
+  "device": {
+    "transport": "serial",
+    "format": "text4",
+    "enabled": false,
+    "sent": false,
+    "normalized_text": "short learner-facing note.",
+    "chunk_count": 7,
+    "chunks": ["shor", "t le", "arne"]
+  },
+  "serial": {
+    "transport": "serial",
+    "format": "text4",
+    "enabled": false
+  }
+}
+```
+
+### Test Surface
+
+- API tests use FastAPI `TestClient` and environment monkeypatching.
+- Device-text tests verify normalization, chunking, and payload behavior.
+- Frontend syntax is checked with `node --check frontend/app.js`.
+- CI runs through the repository test workflow on push.
 
 ## Repository Map
 
@@ -273,6 +374,6 @@ Next steps:
 
 ## AI Declaration
 
-Built with OpenAI Codex assistance for frontend, backend, firmware, serial protocol, and pipeline implementation. Live image understanding, summarization, and speech-to-text use OpenAI model adapters when configured.
+Built end-to-end with OpenAI Codex as the primary implementation agent. Codex generated and iterated the frontend, backend, firmware, serial protocol, OpenAI integration layer, tests, documentation, repository structure, deployment wiring, and commit history for the working prototype. Human direction, product decisions, testing judgment, and final acceptance were provided by the project owner.
 
 Open-source components include FastAPI, pyserial, python-dotenv, OpenAI Python SDK, and optional liblouis braille translation.
